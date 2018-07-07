@@ -18,15 +18,17 @@ import time
 #
 ###########################################################################################################
 owm_url_weather  = 'http://api.openweathermap.org/data/2.5/weather?'
+
+# This is in place for a future enhancement
 owm_url_forecast = 'http://api.openweathermap.org/data/2.5/forecast?'
+
 owm_APIKEY = get_open_weather_map_api_key()
 
 # empty list if you want to manually provide cities
 city_names_list = []
 
 # comment out below list of cities if you want to manually provide cities
-#city_names_list = [('Georgetown', 'TX'), ('Angleton', 'TX'), ('Oak Harbor', 'WA'), ('Wells', 'NV'), \
-#                   ('Dublin',     'CA'), ('Hollis',   'NH'), ('Sunnyvale',  'CA')]
+city_names_list = [('Georgetown', 'TX'), ('Angleton', 'TX'), ('Oak Harbor', 'WA'), ('Wells', 'NV')]
 
 if len(city_names_list) == 0:
     clear_screen()
@@ -56,7 +58,10 @@ while loop_count != 1000:
 
     # __main__() START
 
+    # run the current weather report
+    # run the 3 day forecast report
     run_weather_report(owm_url_weather, owm_APIKEY, city_names_list)
+    run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list)
 
     # __main__() FINISHED
 

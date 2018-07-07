@@ -77,6 +77,35 @@ def welcome_to_weather_report_banner():
 
 # **** End of welcome_to_stock_quotes_banner() **** #
 
+
+def welcome_to_forecast_report_banner():
+
+    #first = 8
+    #mid   = 15 * 5
+    #last  = 30
+    #center = first + mid + last
+    line_len = 118
+
+    # assign string to display in display_banner()
+    first_string  = "Welcome to Forecast Report"
+    second_string = "Weather Forecast: displays 5 day Forecast for Weather Condition, Temperature, Wind and Visibility"
+    third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/forecast? used for queries"
+
+    first_string  = pad_banner_string(first_string, line_len)
+    second_string = pad_banner_string(second_string, line_len)
+    third_string  = pad_banner_string(third_string, line_len)
+
+    print(first_string)
+    print('\n')
+    print(second_string)
+    print('\n')
+    print(third_string)
+    print('\n')
+    print('\n')
+
+# **** End of welcome_to_stock_quotes_banner() **** #
+
+
 def pad_banner_string(string, line_len):
 
     # create spaces for front and back of first_string for display
@@ -147,7 +176,6 @@ def get_city_names_for_weather_report(city_names_list):
                 print(" You did not enter 'y' or 'n'. Please Try Again.")
 
     # **** End of function enter_more_city_names() **** #
-
 
     enter_city_names = True
 
@@ -273,7 +301,7 @@ def get_geocode_degrees(city_names_list, pb):
 
     # api_key for googlemaps geocode api
     geocode_api_key = os.environ['APIKEY']
-
+    
     # start googlemaps Client
     gm = googlemaps.Client(key=geocode_api_key)
 
@@ -354,7 +382,9 @@ def get_city_id(city_names_list, pb):
         country_or_state = city_names_list[i][1]
         city_object = city_names_list[i][2]
 
-        if city_object.owm_last_requests == '' or city_object.perform_owm_api_query() == True:
+        # if city_object.owm_city_id == 0 then update city_object.owm_city_id = owm_city_id
+        # else: city_object.owm_city_id already has valid city_id assigned -> do nothing 
+        if city_object.owm_city_id == 0:
 
             # loop through the read_file and assign owm_name
             # if owm_name == city:
@@ -424,7 +454,7 @@ def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
     # data = requests.get(owm_url_weather, params={'id': city_id, 'APPID': owm_APIKEY})
     #
     # generate_weather_report() was called with following arguments
-    # city_names_list, owm_city_dict, owm_url_weather, owm_APIKEY
+    # city_names_list, owm_url_weather, owm_APIKEY, pb
     #
     ###########################################################################################################
 
@@ -441,17 +471,17 @@ def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
         city_object = city[2]
         city_id = city_object.owm_city_id
 
-        # if city_object.owm_last_requests == '' then a requests.get has never been performed.
-        # if city_object.perform_owm_api_query() == True then it has been >= 10minutes since last requests.get
+        # if city_object.owm_weather_last_requests == '' then a requests.get has never been performed.
+        # if city_object.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
         # if either condition is True then need to do a requests.get
-        if city_object.owm_last_requests == '' or city_object.perform_owm_api_query() == True:
+        if city_object.owm_weather_last_requests == '' or city_object.perform_owm_weather_api_query() == True:
 
             data = requests.get(owm_url_weather, params ={'id': city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
             data = data.json()
 
             city_object.owm_weather_data = data
 
-            city_object.owm_last_requests = datetime.now()
+            city_object.owm_weather_last_requests = datetime.now()
 
         # progress bar for query progress
         pb.query_complete += 1
@@ -522,11 +552,11 @@ def display_weather_report(city_names_list):
     wind       = 'Wind'
     visibility = 'Visibility'
 
-    city       = pad_with_spaces(city, first, 'title')
-    weather    = pad_with_spaces(weather, second, 'title')
-    temp       = pad_with_spaces(temp, mid, 'title')
-    wind       = pad_with_spaces(wind, mid, 'title')
-    visibility = pad_with_spaces(visibility, last, 'title')
+    city       = pad_with_spaces_for_weather_report(city, first, 'title')
+    weather    = pad_with_spaces_for_weather_report(weather, second, 'title')
+    temp       = pad_with_spaces_for_weather_report(temp, mid, 'title')
+    wind       = pad_with_spaces_for_weather_report(wind, mid, 'title')
+    visibility = pad_with_spaces_for_weather_report(visibility, last, 'title')
 
     dashed_line_string = create_dashed_line(first, second, mid, mid_num, last)
 
@@ -544,27 +574,41 @@ def display_weather_report(city_names_list):
         country_or_state = city_names_list[i][1]
         city_object = city_names_list[i][2]
 
+        # get the dictionary data for the city_object
         data = city_object.owm_weather_data
 
+        # create city_string
         city_string   = city_name + ', ' + country_or_state
-        weather_descr = data['weather'][0]['description']
-        city_temp     = str(data['main']['temp']) + ' F'
 
+        # assign weather_descr
+        weather_descr = data['weather'][0]['description']
+
+
+        # unicode degree symbol
+        degrees = "\u00B0"
+
+        # assign the city_temp string
+        city_temp     = int(data['main']['temp'])
+        city_temp     = str(city_temp) + degrees + 'F'
+
+        # the 'wind' may or may not be part of dictionary try and expect will prevent the crash if not available
         try:
             city_wind     = str(data['wind']['speed']) + ' mph'
         except:
             city_wind = 'Not Available'
 
+        # the 'visibility' may or may not be part of dictionary try and expect will prevent the crash if not available
         try:
             city_visibility = str(data['visibility']) + ' feet'
         except:
             city_visibility = 'Not Available'
 
-        city_string = pad_with_spaces(city_string, first, 'first')
-        weather_descr = pad_with_spaces(weather_descr, second, 'second')
-        city_temp = pad_with_spaces(city_temp, mid, 'mid')
-        city_wind = pad_with_spaces(city_wind, mid, 'mid')
-        city_visibility = pad_with_spaces(city_visibility, last, 'last')
+        # pad the string with spaces to prepare for colorama coloring
+        city_string     = pad_with_spaces_for_weather_report(city_string, first, 'first')
+        weather_descr   = pad_with_spaces_for_weather_report(weather_descr, second, 'second')
+        city_temp       = pad_with_spaces_for_weather_report(city_temp, mid, 'mid')
+        city_wind       = pad_with_spaces_for_weather_report(city_wind, mid, 'mid')
+        city_visibility = pad_with_spaces_for_weather_report(city_visibility, last, 'last')
 
         if color_count == 0:
             TEXT_COLOR = Fore.YELLOW
@@ -582,13 +626,12 @@ def display_weather_report(city_names_list):
             TEXT_COLOR = Fore.WHITE
             color_count = 0
 
-
+        # assign the colorama coloring to text
         city_string     = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_string     + Style.RESET_ALL)
         weather_descr   = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + weather_descr   + Style.RESET_ALL)
         city_temp       = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_temp       + Style.RESET_ALL)
         city_wind       = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_wind       + Style.RESET_ALL)
         city_visibility = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_visibility + Style.RESET_ALL)
-
 
         print(" {}{}{}{}{}".format(city_string, weather_descr, city_temp, city_wind, city_visibility))
 
@@ -598,7 +641,7 @@ def display_weather_report(city_names_list):
 # **** End of function display_weather_report() **** #
 
 
-def pad_with_spaces(var, length, position):
+def pad_with_spaces_for_weather_report(var, length, position):
 
     # convert var to string.
     var = str(var)
@@ -625,7 +668,326 @@ def pad_with_spaces(var, length, position):
 
     return var
 
-# **** End of pad_with_spaces() **** #
+# **** End of pad_with_spaces_for_weather_report() **** #
+
+
+def get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb):
+
+    def write_frf_json(data, city_name, country_or_state):
+
+        # owm = 'OpenWeatherMap'
+        # frf - 'forecast report file'
+        # owm_frf_by_city_path imported - from paths_owm import *
+        file = owm_frf_by_city_path + '{}_{}'.format(city_name, country_or_state) + '.json'
+
+        with open(file, 'w+') as outfile:
+            json.dump(data, outfile, indent=1, ensure_ascii=False)
+
+    # **** End of function write_wrf_content() **** #
+
+    ###########################################################################################################
+    #
+    # example of api call to OpenWeatherMap api
+    # http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={APIKEY}
+    #
+    # api.openweathermap.org query
+    # owm_url_forecast = 'http://api.openweathermap.org/data/2.5/forecast?'
+    # data = requests.get(owm_url_weather, params={'id': city_id, 'APPID': owm_APIKEY})
+    #
+    # generate_forecast_report() was called with following arguments
+    # city_names_list, owm_url_forecast, owm_APIKEY
+    #
+    ###########################################################################################################
+
+    # Log start time
+    start_time = datetime.now()
+    time_message = "TIME: get_owm_weather_data() "
+    execution_TIME(time_message, 'start', start_time)
+
+    for city in city_names_list:
+
+        # city = (city_name, country_or_state, city_object)
+        city_name = city[0]
+        country_or_state = city[1]
+        city_object = city[2]
+        city_id = city_object.owm_city_id
+
+        # if city_object.owm_weather_last_requests == '' then a requests.get has never been performed.
+        # if city_object.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
+        # if either condition is True then need to do a requests.get
+        if city_object.owm_forecast_last_requests == '' or city_object.perform_owm_forecast_api_query() == True:
+
+            data = requests.get(owm_url_forecast, params ={'id': city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
+            data = data.json()
+
+            # REMOVE after completely debugged
+            write_frf_json(data, city_name, country_or_state)
+
+            city_object.owm_forecast_data = data
+
+            city_object.owm_forecast_last_requests = datetime.now()
+
+        # progress bar for query progress
+        pb.query_complete += 1
+
+        display_progress_bar(pb)
+        time.sleep(.2)
+
+    # Log finished time
+    finished_time = datetime.now()
+    time_message = "TIME: get_owm_weather_data() "
+    execution_TIME(time_message, 'finished', start_time, finished_time)
+
+# **** End of function get_owm_forecast_data() **** #
+
+def setup_forecast_report(city_names_list):
+
+    # assigns updated values for attributes in city_object object
+
+    for i in range(len(city_names_list)):
+        city_name = city_names_list[i][0]
+        country_or_state = city_names_list[i][1]
+        city_object = city_names_list[i][2]
+
+        city_object.forecast_first_weekday_name()
+        city_object.find_temp_max()
+        city_object.find_highest_weather_code()
+        city_object.set_weather_description()
+
+# **** End of function setup_forecast_report() **** #
+
+
+def display_forecast_report(city_names_list):
+
+    def create_dashed_line_forecast_report(section, section_num):
+
+        # assign dashed lines for the display format
+        dashed_line_string = ''
+        section_string = ''
+
+        for i in range(section):
+            if i == 0:
+                section_string = section_string + '|'
+
+            else:
+                section_string = section_string + '-'
+
+        count = 1
+        while count <= section_num:
+            dashed_line_string = dashed_line_string + section_string
+            count += 1
+
+        dashed_line_string = ' ' + dashed_line_string + '|'
+
+        return dashed_line_string
+
+    # **** End of function create_dashed_line_forecast_report() **** #
+
+    section      = 39      # length of each display section
+    section_num  = 3       # number of display sections
+
+    # create dashed line
+    dashed_line_string = create_dashed_line_forecast_report(section, section_num)
+
+    # create blank row
+    blank1    = ' '
+    blank2    = ' '
+    blank_row = pad_forecast_strings(blank1, blank2, section)
+    blank_row = (Back.BLACK + blank_row + Style.RESET_ALL)
+
+    print("  Three Day Forecast")
+
+    color_count = 0
+
+    for city in city_names_list:
+        city_name = city[0]
+        country_or_state = city[1]
+        city_object = city[2]
+
+        if color_count == 0:
+            TEXT_COLOR = Fore.YELLOW
+            color_count += 1
+
+        elif color_count == 1:
+            TEXT_COLOR = Fore.CYAN
+            color_count += 1
+
+        elif color_count == 2:
+            TEXT_COLOR = Fore.GREEN
+            color_count += 1
+
+        elif color_count == 3:
+            TEXT_COLOR = Fore.WHITE
+            color_count = 0
+
+        # print dashed line
+        print(dashed_line_string)
+
+        # print blank row
+        print("  {}|{}|{}".format(blank_row, blank_row, blank_row))
+
+        # create the location variable and assign with city_name, country_or_state
+        location = city_name + ', ' + country_or_state
+
+        # get the 3 day weekday names for the forecast
+        three_days = city_object.return_three_day_weekday_names()
+        day1 = three_days[0]
+        day2 = three_days[1]
+        day3 = three_days[2]
+
+        city_day1 = pad_forecast_strings(location, day1, section)
+        city_day2 = pad_forecast_strings(location, day2, section)
+        city_day3 = pad_forecast_strings(location, day3, section)
+
+        city_day1 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_day1 + Style.RESET_ALL)
+        city_day2 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_day2 + Style.RESET_ALL)
+        city_day3 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + city_day3 + Style.RESET_ALL)
+        print("  {}|{}|{}".format(city_day1, city_day2, city_day3))
+
+        # print blank row
+        print("  {}|{}|{}".format(blank_row, blank_row, blank_row))
+
+        # print blank row
+        print("  {}|{}|{}".format(blank_row, blank_row, blank_row))
+
+        # get the high temperatures for the 3 days
+        # assign high_temp1,2,3 to strings
+        high_temp1, high_temp2, high_temp3 = get_high_temps(three_days, city_object)
+
+        # high_temp1,2,3 are type float. convert to type int
+        high_temp1 = int(high_temp1)
+        high_temp2 = int(high_temp2)
+        high_temp3 = int(high_temp3)
+
+        # unicode degree symbol
+        degrees = "\u00B0"
+
+        # assign high_temp1,2,3 strings
+        high_temp1 = str(high_temp1) + degrees + "F"
+        high_temp2 = str(high_temp2) + degrees + "F"
+        high_temp3 = str(high_temp3) + degrees + "F"
+
+        # get the weather descriptions for descr1,2,3
+        descr1, descr2, descr3 = get_weather_descriptions(three_days, city_object)
+
+        weather_condition1 = pad_forecast_strings(high_temp1, descr1, section)
+        weather_condition2 = pad_forecast_strings(high_temp2, descr2, section)
+        weather_condition3 = pad_forecast_strings(high_temp3, descr3, section)
+
+        weather_condition1 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + weather_condition1 + Style.RESET_ALL)
+        weather_condition2 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + weather_condition2 + Style.RESET_ALL)
+        weather_condition3 = (TEXT_COLOR + Style.BRIGHT + Back.BLACK + weather_condition3 + Style.RESET_ALL)
+
+        # print weather condition
+        print("  {}|{}|{}".format(weather_condition1, weather_condition2, weather_condition3))
+
+        # print blank row
+        print("  {}|{}|{}".format(blank_row, blank_row, blank_row))
+
+    print(dashed_line_string)
+
+# **** End of function display_forecast_report() **** #
+
+
+def pad_forecast_strings(string1, string2, section):
+
+    string_len_sum = len(string1) + len(string2)
+
+    string1 = ' ' + string1
+
+    for i in range(section - string_len_sum - 3):
+        string1 = string1 + ' '
+
+    string = string1 + string2 + ' '
+
+    return string
+
+# **** End of function pad_forecast_strings() **** #
+
+
+def get_high_temps(three_days, city_object):
+
+    # get the high_temp for each weekday in the three_day list
+    if three_days[0] == 'Sunday':
+        high_temp1 = city_object.sunday_high_temp
+        high_temp2 = city_object.monday_high_temp
+        high_temp3 = city_object.tuesday_high_temp
+
+    elif three_days[0] == 'Monday':
+        high_temp1 = city_object.monday_high_temp
+        high_temp2 = city_object.tuesday_high_temp
+        high_temp3 = city_object.wednesday_high_temp
+
+    elif three_days[0] == 'Tuesday':
+        high_temp1 = city_object.tuesday_high_temp
+        high_temp2 = city_object.wednesday_high_temp
+        high_temp3 = city_object.thursday_high_temp
+
+    elif three_days[0] == 'Wednesday':
+        high_temp1 = city_object.wednesday_high_temp
+        high_temp2 = city_object.thursday_high_temp
+        high_temp3 = city_object.friday_high_temp
+
+    elif three_days[0] == 'Thursday':
+        high_temp1 = city_object.thursday_high_temp
+        high_temp2 = city_object.friday_high_temp
+        high_temp3 = city_object.saturday_high_temp
+
+    elif three_days[0] == 'Friday':
+        high_temp1 = city_object.friday_high_temp
+        high_temp2 = city_object.saturday_high_temp
+        high_temp3 = city_object.sunday_high_temp
+
+    elif three_days[0] == 'Saturday':
+        high_temp1 = city_object.saturday_high_temp
+        high_temp2 = city_object.sunday_high_temp
+        high_temp3 = city_object.monday_high_temp
+
+    return high_temp1, high_temp2, high_temp3
+
+# **** End of function get_high_temps() **** #
+
+
+def get_weather_descriptions(three_days, city_object):
+
+    if three_days[0] == 'Sunday':
+        descr1 = city_object.sunday_weather_description
+        descr2 = city_object.monday_weather_description
+        descr3 = city_object.tuesday_weather_description
+
+    elif three_days[0] == 'Monday':
+        descr1 = city_object.monday_weather_description
+        descr2 = city_object.tuesday_weather_description
+        descr3 = city_object.wednesday_weather_description
+
+    elif three_days[0] == 'Tuesday':
+        descr1 = city_object.tuesday_weather_description
+        descr2 = city_object.wednesday_weather_description
+        descr3 = city_object.thursday_weather_description
+
+    elif three_days[0] == 'Wednesday':
+        descr1 = city_object.wednesday_weather_description
+        descr2 = city_object.thursday_weather_description
+        descr3 = city_object.friday_weather_description
+
+    elif three_days[0] == 'Thursday':
+        descr1 = city_object.thursday_weather_description
+        descr2 = city_object.friday_weather_description
+        descr3 = city_object.saturday_weather_description
+
+    elif three_days[0] == 'Friday':
+        descr1 = city_object.friday_weather_description
+        descr2 = city_object.saturday_weather_description
+        descr3 = city_object.sunday_weather_description
+
+    elif three_days[0] == 'Saturday':
+        descr1 = city_object.saturday_weather_description
+        descr2 = city_object.sunday_weather_description
+        descr3 = city_object.monday_weather_description
+
+    return descr1, descr2, descr3
+
+# **** End of function get_weather_descriptions() **** #
 
 
 def progress_bar_scale(query_type):
