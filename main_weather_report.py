@@ -27,7 +27,8 @@ owm_APIKEY = get_open_weather_map_api_key()
 # empty list if you want to manually provide cities
 city_names_list = []
 
-# comment out below list of cities if you want to manually provide cities
+# an option, create a list of cities to track in weather and forecast report
+# if this option is chosen, then get_city_names_for_weather_report(city_names_list) will not be called
 city_names_list = [('Georgetown', 'TX'), ('Angleton', 'TX'), ('Oak Harbor', 'WA'), ('Wells', 'NV')]
 
 if len(city_names_list) == 0:
@@ -35,7 +36,7 @@ if len(city_names_list) == 0:
     print('\n')
     city_names_list = get_city_names_for_weather_report(city_names_list)
 
-city_names_list = add_city_object_to_list(city_names_list)
+city_object_list = create_city_object_list(city_names_list)
 
 # create file execution_time_path with w+
 # remaining writes to this file will be done calling execution_TIME()
@@ -60,8 +61,8 @@ while loop_count != 1000:
 
     # run the current weather report
     # run the 3 day forecast report
-    run_weather_report(owm_url_weather, owm_APIKEY, city_names_list)
-    run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list)
+    run_weather_report(owm_url_weather, owm_APIKEY, city_object_list)
+    run_forecast_report(owm_url_forecast, owm_APIKEY, city_object_list)
 
     # __main__() FINISHED
 

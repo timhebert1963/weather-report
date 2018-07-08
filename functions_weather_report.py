@@ -268,31 +268,30 @@ def does_city_exist(city, country_or_state):
 # **** End of function does_city_exist() **** #
 
 
-def add_city_object_to_list(city_names_list):
+def create_city_object_list(city_names_list):
 
-    # create an instance of class City() and replace the tuple in city_names_list for each index
-    #
-    # city_names_list passed in as arg example:
-    # - city_names_list = [(city1_name, country_or_state), (city2_name, country_or_state), etc..]
-    #
-    # city_names_list after city_object is added:
-    # - city_names_list = [(city1_name, country_or_state, city_object), (city2_name, country_or_state, city_object), etc..]
+    # this function will create a city_object_list
+    # - create an instance of the class City()
+    # - assign city_name to city_object.city_name
+    # - assign country_or_state to city_object.country_or_state
+
+    city_object_list = []
+
     for i in range(len(city_names_list)):
-        city_name = city_names_list[i][0]
-        country_or_state = city_names_list[i][1]
+        city_name = city_names_list[i][0].title()
+        country_or_state = city_names_list[i][1].upper()
 
         city_object = City()
+        city_object.city_name = city_name
+        city_object.country_or_state = country_or_state
+        city_object_list.append(city_object)
 
-        new_tup = (city_name, country_or_state, city_object)
+    return city_object_list
 
-        city_names_list[i] = new_tup
-
-    return city_names_list
-
-# **** End of function add_city_object_to_list() **** #
+# **** End of function create_city_object_list() **** #
 
 
-def get_geocode_degrees(city_names_list, pb):
+def get_geocode_degrees(city_object_list, pb):
 
     # Log start time
     start_time = datetime.now()
@@ -305,38 +304,33 @@ def get_geocode_degrees(city_names_list, pb):
     # start googlemaps Client
     gm = googlemaps.Client(key=geocode_api_key)
 
-    # loop through each item in city_names_list 
-    # city_names_list = [(city1, country_or_state1), (city2, country_or_state2), etc..]
-    # item = (city1, country_or_state1)
-    for city in city_names_list:
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
-        city_name = city[0]
-        country_or_state = city[1]
-        city_object = city[2]
-
-        if city_object.geocode_degrees == False:
+        if city.geocode_degrees == False:
 
             # assign item = (city, country_or_state)
-            item = (city_name, country_or_state)
+            item = (city.city_name, city.country_or_state)
 
             try:
                 # call the geocode api
                 # get the geocode lat and lng 
                 # lat and lng are returned from api as 'str'. assigning as float
                 # need to compare to owm_lat and lon in other functions. better to assign as float now
-                city_object.geocode_lat = float(gm.geocode(item)[0]['geometry']['location']['lat'])
-                city_object.geocode_lng = float(gm.geocode(item)[0]['geometry']['location']['lng'])
+                city.geocode_lat = float(gm.geocode(item)[0]['geometry']['location']['lat'])
+                city.geocode_lng = float(gm.geocode(item)[0]['geometry']['location']['lng'])
 
                 # geocode degrees are now updated in city_obect
-                # assign city_object.geocode_degrees = True
-                city_object.geocode_degrees = True
+                # assign city.geocode_degrees = True
+                city.geocode_degrees = True
 
             except:
                 # it is possible the city is not valid or cannot be found in the geocode query
                 # assign the lat, lng values to 'NA'
                 # hopefully this does not happen
-                city_object.geocode_lat = 'NA'
-                city_object.geocode_lng = 'NA'
+                city.geocode_lat = 'NA'
+                city.geocode_lng = 'NA'
 
         # progress bar for query
         pb.query_complete += 1
@@ -352,7 +346,7 @@ def get_geocode_degrees(city_names_list, pb):
 # **** End of function get_geocode_degrees() **** #
 
 
-def get_city_id(city_names_list, pb):
+def get_city_id(city_object_list, pb):
 
     ###########################################################################################################
     #
@@ -373,47 +367,42 @@ def get_city_id(city_names_list, pb):
     read_file = json.loads(open_file.read())
     open_file.close()
 
-    # loop through city_names_list and use city name which is city_names_list[i][0] to match with
-    # the read_file owm_name
-    #
-    # example: city_names_list = [('Clute', 'TX'), ('London', 'England')]
-    for i in range(len(city_names_list)):
-        city_name = city_names_list[i][0]
-        country_or_state = city_names_list[i][1]
-        city_object = city_names_list[i][2]
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
-        # if city_object.owm_city_id == 0 then update city_object.owm_city_id = owm_city_id
-        # else: city_object.owm_city_id already has valid city_id assigned -> do nothing 
-        if city_object.owm_city_id == 0:
+        # if city.owm_city_id == 0 then update city.owm_city_id = owm_city_id
+        # else: city.owm_city_id already has valid city_id assigned -> do nothing 
+        if city.owm_city_id == 0:
 
             # loop through the read_file and assign owm_name
             # if owm_name == city:
             #     check to see if int(geocode_lat) == int(owm_lat) and int(geocode_lng) == int(owm_lon)
             #     if this is true then assign city_id to   
-            for x in range(len(read_file)):
+            for i in range(len(read_file)):
                 try:
-                    owm_name = read_file[x]['name']
+                    owm_name = read_file[i]['name']
                 except:
                     print("FATAL ERROR: get_city_id() {} does not exist in city.list.json file")
                     print("Pause # *********************** #")
                     print("PAUSE # *******  VERIFY  ****** #")
                     input("Pause # *********************** #")
 
-                if owm_name.lower() == city_name.lower():
+                if owm_name.lower() == city.city_name.lower():
 
-                    owm_city_id = read_file[x]['id']
-                    owm_lat     = read_file[x]['coord']['lat']
-                    owm_lon     = read_file[x]['coord']['lon']
+                    owm_city_id = read_file[i]['id']
+                    owm_lat     = read_file[i]['coord']['lat']
+                    owm_lon     = read_file[i]['coord']['lon']
 
                     # check to see if int(lat) and int(lon) are within a range of +2 or -2 for lat and lon
                     # when comparing geocode and OpenWeatherMap coordinates. if this is True there is a match
                     #
                     # the coordinates between geocode and OpenWeatherMap are not always exactly the same but should
                     # be within a tolerance of +2 or -2
-                    if (int(city_object.geocode_lat) <= int(owm_lat + 2) and int(city_object.geocode_lat) >= int(owm_lat - 2)) and \
-                       (int(city_object.geocode_lng) <= int(owm_lon + 2) and int(city_object.geocode_lng) >= int(owm_lon - 2)):
+                    if (int(city.geocode_lat) <= int(owm_lat + 2) and int(city.geocode_lat) >= int(owm_lat - 2)) and \
+                       (int(city.geocode_lng) <= int(owm_lon + 2) and int(city.geocode_lng) >= int(owm_lon - 2)):
 
-                        city_object.owm_city_id = owm_city_id
+                        city.owm_city_id = owm_city_id
                         break
 
         # progress bar for query progress
@@ -430,7 +419,7 @@ def get_city_id(city_names_list, pb):
 # **** End of function get_city_id() **** #
 
 
-def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
+def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
 
     def write_wrf_json(data, city_name, country_or_state):
 
@@ -454,7 +443,7 @@ def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
     # data = requests.get(owm_url_weather, params={'id': city_id, 'APPID': owm_APIKEY})
     #
     # generate_weather_report() was called with following arguments
-    # city_names_list, owm_url_weather, owm_APIKEY, pb
+    # city_object_list, owm_url_weather, owm_APIKEY, pb
     #
     ###########################################################################################################
 
@@ -463,25 +452,24 @@ def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
     time_message = "TIME: get_owm_weather_data() "
     execution_TIME(time_message, 'start', start_time)
 
-    for city in city_names_list:
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
-        # city = (city_name, country_or_state, city_object)
-        city_name = city[0]
-        country_or_state = city[1]
-        city_object = city[2]
-        city_id = city_object.owm_city_id
-
-        # if city_object.owm_weather_last_requests == '' then a requests.get has never been performed.
-        # if city_object.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
+        # if city.owm_weather_last_requests == '' then a requests.get has never been performed.
+        # if city.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
         # if either condition is True then need to do a requests.get
-        if city_object.owm_weather_last_requests == '' or city_object.perform_owm_weather_api_query() == True:
+        if city.owm_weather_last_requests == '' or city.perform_owm_weather_api_query() == True:
 
-            data = requests.get(owm_url_weather, params ={'id': city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
+            data = requests.get(owm_url_weather, params ={'id': city.owm_city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
             data = data.json()
 
-            city_object.owm_weather_data = data
+            # update the city instance attributes
+            city.owm_weather_data = data
+            city.owm_weather_last_requests = datetime.now()
 
-            city_object.owm_weather_last_requests = datetime.now()
+            # write to file for debugging purposes in case the json data needs to be viewed off-line.
+            write_wrf_json(data, city.city_name, city.country_or_state)
 
         # progress bar for query progress
         pb.query_complete += 1
@@ -497,7 +485,22 @@ def get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb):
 # **** End of function get_owm_weather_data() **** #
 
 
-def display_weather_report(city_names_list):
+def setup_weather_report(city_object_list):
+
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    # assigns updated values for attributes in city object
+    for city in city_object_list:
+
+        city.update_owm_temp()
+        city.update_owm_wind()
+        city.update_owm_visibility()
+        city.update_owm_description()
+
+# **** End of function setup_weather_report() **** #
+
+
+def display_weather_report(city_object_list):
 
     def create_dashed_line(first, second, mid, mid_num, last):
 
@@ -568,40 +571,38 @@ def display_weather_report(city_names_list):
     print(dashed_line_string)
 
     color_count = 0
-    for i in range(len(city_names_list)):
 
-        city_name = city_names_list[i][0]
-        country_or_state = city_names_list[i][1]
-        city_object = city_names_list[i][2]
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
-        # get the dictionary data for the city_object
-        data = city_object.owm_weather_data
+        # get the dictionary data from the city.owm_weather_date attribute
+        data = city.owm_weather_data
 
         # create city_string
-        city_string   = city_name + ', ' + country_or_state
+        city_string   = city.city_name + ', ' + city.country_or_state
 
         # assign weather_descr
-        weather_descr = data['weather'][0]['description']
-
+        weather_descr = city.owm_description
 
         # unicode degree symbol
         degrees = "\u00B0"
 
         # assign the city_temp string
-        city_temp     = int(data['main']['temp'])
+        city_temp     = int(city.owm_temp)
         city_temp     = str(city_temp) + degrees + 'F'
 
         # the 'wind' may or may not be part of dictionary try and expect will prevent the crash if not available
-        try:
-            city_wind     = str(data['wind']['speed']) + ' mph'
-        except:
-            city_wind = 'Not Available'
+        if city.owm_wind != 'Not Available':
+            city_wind = "{0:.2f}".format(city.owm_wind) + ' mph'
+        else:
+            city_wind = city.owm_wind
 
         # the 'visibility' may or may not be part of dictionary try and expect will prevent the crash if not available
-        try:
-            city_visibility = str(data['visibility']) + ' feet'
-        except:
-            city_visibility = 'Not Available'
+        if city.owm_visibility != 'Not Available':
+            city_visibility = str(city.owm_visibility) + ' feet'
+        else:
+            city_visibility = city.owm_visibility
 
         # pad the string with spaces to prepare for colorama coloring
         city_string     = pad_with_spaces_for_weather_report(city_string, first, 'first')
@@ -671,7 +672,7 @@ def pad_with_spaces_for_weather_report(var, length, position):
 # **** End of pad_with_spaces_for_weather_report() **** #
 
 
-def get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb):
+def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
 
     def write_frf_json(data, city_name, country_or_state):
 
@@ -695,7 +696,7 @@ def get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb):
     # data = requests.get(owm_url_weather, params={'id': city_id, 'APPID': owm_APIKEY})
     #
     # generate_forecast_report() was called with following arguments
-    # city_names_list, owm_url_forecast, owm_APIKEY
+    # city_object_list, owm_url_forecast, owm_APIKEY, pb
     #
     ###########################################################################################################
 
@@ -704,28 +705,24 @@ def get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb):
     time_message = "TIME: get_owm_weather_data() "
     execution_TIME(time_message, 'start', start_time)
 
-    for city in city_names_list:
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
-        # city = (city_name, country_or_state, city_object)
-        city_name = city[0]
-        country_or_state = city[1]
-        city_object = city[2]
-        city_id = city_object.owm_city_id
-
-        # if city_object.owm_weather_last_requests == '' then a requests.get has never been performed.
-        # if city_object.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
+        # if city.owm_weather_last_requests == '' then a requests.get has never been performed.
+        # if city.perform_owm_weather_api_query() == True then it has been >= 10minutes since last requests.get
         # if either condition is True then need to do a requests.get
-        if city_object.owm_forecast_last_requests == '' or city_object.perform_owm_forecast_api_query() == True:
+        if city.owm_forecast_last_requests == '' or city.perform_owm_forecast_api_query() == True:
 
-            data = requests.get(owm_url_forecast, params ={'id': city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
+            data = requests.get(owm_url_forecast, params ={'id': city.owm_city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
             data = data.json()
 
             # REMOVE after completely debugged
-            write_frf_json(data, city_name, country_or_state)
+            write_frf_json(data, city.city_name, city.country_or_state)
 
-            city_object.owm_forecast_data = data
+            city.owm_forecast_data = data
 
-            city_object.owm_forecast_last_requests = datetime.now()
+            city.owm_forecast_last_requests = datetime.now()
 
         # progress bar for query progress
         pb.query_complete += 1
@@ -740,24 +737,22 @@ def get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb):
 
 # **** End of function get_owm_forecast_data() **** #
 
-def setup_forecast_report(city_names_list):
+def setup_forecast_report(city_object_list):
 
-    # assigns updated values for attributes in city_object object
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    # assigns updated values for attributes in city object
+    for city in city_object_list:
 
-    for i in range(len(city_names_list)):
-        city_name = city_names_list[i][0]
-        country_or_state = city_names_list[i][1]
-        city_object = city_names_list[i][2]
-
-        city_object.forecast_first_weekday_name()
-        city_object.find_temp_max()
-        city_object.find_highest_weather_code()
-        city_object.set_weather_description()
+        city.forecast_first_weekday_name()
+        city.find_temp_max()
+        city.find_highest_weather_code()
+        city.set_weather_description()
 
 # **** End of function setup_forecast_report() **** #
 
 
-def display_forecast_report(city_names_list):
+def display_forecast_report(city_object_list):
 
     def create_dashed_line_forecast_report(section, section_num):
 
@@ -799,10 +794,9 @@ def display_forecast_report(city_names_list):
 
     color_count = 0
 
-    for city in city_names_list:
-        city_name = city[0]
-        country_or_state = city[1]
-        city_object = city[2]
+    # loop through each item in city_object_list 
+    # city_object_list = [city1_object, city2_object, etc..]
+    for city in city_object_list:
 
         if color_count == 0:
             TEXT_COLOR = Fore.YELLOW
@@ -827,10 +821,10 @@ def display_forecast_report(city_names_list):
         print("  {}|{}|{}".format(blank_row, blank_row, blank_row))
 
         # create the location variable and assign with city_name, country_or_state
-        location = city_name + ', ' + country_or_state
+        location = city.city_name + ', ' + city.country_or_state
 
         # get the 3 day weekday names for the forecast
-        three_days = city_object.return_three_day_weekday_names()
+        three_days = city.return_three_day_weekday_names()
         day1 = three_days[0]
         day2 = three_days[1]
         day3 = three_days[2]
@@ -852,7 +846,7 @@ def display_forecast_report(city_names_list):
 
         # get the high temperatures for the 3 days
         # assign high_temp1,2,3 to strings
-        high_temp1, high_temp2, high_temp3 = get_high_temps(three_days, city_object)
+        high_temp1, high_temp2, high_temp3 = get_high_temps(three_days, city)
 
         # high_temp1,2,3 are type float. convert to type int
         high_temp1 = int(high_temp1)
@@ -868,7 +862,7 @@ def display_forecast_report(city_names_list):
         high_temp3 = str(high_temp3) + degrees + "F"
 
         # get the weather descriptions for descr1,2,3
-        descr1, descr2, descr3 = get_weather_descriptions(three_days, city_object)
+        descr1, descr2, descr3 = get_weather_descriptions(three_days, city)
 
         weather_condition1 = pad_forecast_strings(high_temp1, descr1, section)
         weather_condition2 = pad_forecast_strings(high_temp2, descr2, section)
@@ -905,85 +899,85 @@ def pad_forecast_strings(string1, string2, section):
 # **** End of function pad_forecast_strings() **** #
 
 
-def get_high_temps(three_days, city_object):
+def get_high_temps(three_days, city):
 
     # get the high_temp for each weekday in the three_day list
     if three_days[0] == 'Sunday':
-        high_temp1 = city_object.sunday_high_temp
-        high_temp2 = city_object.monday_high_temp
-        high_temp3 = city_object.tuesday_high_temp
+        high_temp1 = city.sunday_high_temp
+        high_temp2 = city.monday_high_temp
+        high_temp3 = city.tuesday_high_temp
 
     elif three_days[0] == 'Monday':
-        high_temp1 = city_object.monday_high_temp
-        high_temp2 = city_object.tuesday_high_temp
-        high_temp3 = city_object.wednesday_high_temp
+        high_temp1 = city.monday_high_temp
+        high_temp2 = city.tuesday_high_temp
+        high_temp3 = city.wednesday_high_temp
 
     elif three_days[0] == 'Tuesday':
-        high_temp1 = city_object.tuesday_high_temp
-        high_temp2 = city_object.wednesday_high_temp
-        high_temp3 = city_object.thursday_high_temp
+        high_temp1 = city.tuesday_high_temp
+        high_temp2 = city.wednesday_high_temp
+        high_temp3 = city.thursday_high_temp
 
     elif three_days[0] == 'Wednesday':
-        high_temp1 = city_object.wednesday_high_temp
-        high_temp2 = city_object.thursday_high_temp
-        high_temp3 = city_object.friday_high_temp
+        high_temp1 = city.wednesday_high_temp
+        high_temp2 = city.thursday_high_temp
+        high_temp3 = city.friday_high_temp
 
     elif three_days[0] == 'Thursday':
-        high_temp1 = city_object.thursday_high_temp
-        high_temp2 = city_object.friday_high_temp
-        high_temp3 = city_object.saturday_high_temp
+        high_temp1 = city.thursday_high_temp
+        high_temp2 = city.friday_high_temp
+        high_temp3 = city.saturday_high_temp
 
     elif three_days[0] == 'Friday':
-        high_temp1 = city_object.friday_high_temp
-        high_temp2 = city_object.saturday_high_temp
-        high_temp3 = city_object.sunday_high_temp
+        high_temp1 = city.friday_high_temp
+        high_temp2 = city.saturday_high_temp
+        high_temp3 = city.sunday_high_temp
 
     elif three_days[0] == 'Saturday':
-        high_temp1 = city_object.saturday_high_temp
-        high_temp2 = city_object.sunday_high_temp
-        high_temp3 = city_object.monday_high_temp
+        high_temp1 = city.saturday_high_temp
+        high_temp2 = city.sunday_high_temp
+        high_temp3 = city.monday_high_temp
 
     return high_temp1, high_temp2, high_temp3
 
 # **** End of function get_high_temps() **** #
 
 
-def get_weather_descriptions(three_days, city_object):
+def get_weather_descriptions(three_days, city):
 
     if three_days[0] == 'Sunday':
-        descr1 = city_object.sunday_weather_description
-        descr2 = city_object.monday_weather_description
-        descr3 = city_object.tuesday_weather_description
+        descr1 = city.sunday_weather_description
+        descr2 = city.monday_weather_description
+        descr3 = city.tuesday_weather_description
 
     elif three_days[0] == 'Monday':
-        descr1 = city_object.monday_weather_description
-        descr2 = city_object.tuesday_weather_description
-        descr3 = city_object.wednesday_weather_description
+        descr1 = city.monday_weather_description
+        descr2 = city.tuesday_weather_description
+        descr3 = city.wednesday_weather_description
 
     elif three_days[0] == 'Tuesday':
-        descr1 = city_object.tuesday_weather_description
-        descr2 = city_object.wednesday_weather_description
-        descr3 = city_object.thursday_weather_description
+        descr1 = city.tuesday_weather_description
+        descr2 = city.wednesday_weather_description
+        descr3 = city.thursday_weather_description
 
     elif three_days[0] == 'Wednesday':
-        descr1 = city_object.wednesday_weather_description
-        descr2 = city_object.thursday_weather_description
-        descr3 = city_object.friday_weather_description
+        descr1 = city.wednesday_weather_description
+        descr2 = city.thursday_weather_description
+        descr3 = city.friday_weather_description
 
     elif three_days[0] == 'Thursday':
-        descr1 = city_object.thursday_weather_description
-        descr2 = city_object.friday_weather_description
-        descr3 = city_object.saturday_weather_description
+        descr1 = city.thursday_weather_description
+        descr2 = city.friday_weather_description
+        descr3 = city.saturday_weather_description
 
     elif three_days[0] == 'Friday':
-        descr1 = city_object.friday_weather_description
-        descr2 = city_object.saturday_weather_description
-        descr3 = city_object.sunday_weather_description
+        descr1 = city.friday_weather_description
+        descr2 = city.saturday_weather_description
+        descr3 = city.sunday_weather_description
 
     elif three_days[0] == 'Saturday':
-        descr1 = city_object.saturday_weather_description
-        descr2 = city_object.sunday_weather_description
-        descr3 = city_object.monday_weather_description
+        descr1 = city.saturday_weather_description
+        descr2 = city.sunday_weather_description
+        descr3 = city.monday_weather_description
 
     return descr1, descr2, descr3
 
@@ -1036,79 +1030,3 @@ def display_progress_bar(pb):
         print(pbar, end="")
 
 # **** End of display_progress_bar() **** #
-
-
-def load_wrf_json(city_name, country_or_state):
-
-    # owm = 'OpenWeatherMap'
-    # wrf - 'weather report file'
-    # owm_wrf_by_city_path is imported - from paths_owm import *
-    file = owm_wrf_by_city_path + '{}_{}'.format(city_name, country_or_state) + '.json'
-
-    with open(file) as f:
-        data = json.load(f)
-
-    return data
-
-# **** End of function load_wrf_json() **** #
-
-
-def load_json_data_from_city_object(city_names_list):
-
-    # example: city_names_list = [('Clute', 'TX'), ('Danbury', 'TX'), ('Dublin', 'CA'), ('Eufaula', 'OK')]
-    for city in city_names_list:
-        city_name = city[0]
-        country_or_state = city[1]
-        city_object = city[2]
-
-        print("load_json_data() ........................ city = {}, {}".format(city_name, country_or_state))
-
-        data = city_object.owm_weather_data
-
-        #data = load_wrf_json(city_name, country_or_state)
-
-        keys_list = list(data.keys())
-        for key in keys_list:
-            key_type = type(data[key])
-
-            # keys of type dict
-            if key_type == dict:
-                level_one_keys = list(data[key].keys())
-
-                for level_1_key in level_one_keys:
-                    print("load_json_data() [{}][{}] = {}".format(key, level_1_key, data[key][level_1_key]))
-
-            # keys of type list
-            elif key_type == list:
-                list_length = len(data[key])
-
-                for i in range(list_length):
-                    level_one_keys = list(data[key][i].keys())
-
-                    for level_1_key in level_one_keys:
-                        print("load_json_data() [{}][{}][{}] = {}".format(key, i, level_1_key, data[key][i][level_1_key]))
-
-            # keys of type float
-            elif key_type == str:
-                print("load_json_data() [{}] = {}".format(key, data[key]))
-
-            # keys of type float
-            elif key_type == int:
-                print("load_json_data() [{}] = {}".format(key, data[key]))
-
-            # keys of type float
-            elif key_type == float:
-                print("load_json_data() [{}] = {}".format(key, data[key]))
-
-            else:
-                key_type = type(data[key])
-                print("load_json_data() key_type == {}".format(type(data[key])))
-                print("load_json_data() [{}] = {}".format(key, data[key]))
-                print("load_json_data() ************************")
-                print("load_json_data() ******   VERIFY   ******")
-                input("load_json_data() ************************")
-
-        print('\n')
-
-
-# **** End of function load_json_data_from_city_object() **** #

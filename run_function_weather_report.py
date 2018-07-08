@@ -4,16 +4,14 @@ import time
 
 # **** End of imports **** #
 
-def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
+def run_weather_report(owm_url_weather, owm_APIKEY, city_object_list):
 
     ###########################################################################################################
     #
     # args passed in to run_weather_report()
     # - owm_url_weather arg: api to weather reports per city_id
     # - owm_APIKEY arg: api key for OpenWeatherMap pass in as a parameter to owm_url_weather
-    # - city_names_list arg: list of tuples (city_name, country_or_state) used to retrieve coordinates (lat/lon),
-    #   'city_id', etc. city_names_list is like the master list of city names and all data structures will need
-    #   to be in sync with the items in the list.
+    # - city_object_list arg: list of city objects for each city being tracked in weather report
     #
     ###########################################################################################################
 
@@ -40,17 +38,17 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
     #
     ###########################################################################################################
     progress_bar_scale('geocode')
-    pb = ProgressBar(len(city_names_list))
+    pb = ProgressBar(len(city_object_list))
 
     ###########################################################################################################
     #
     # 3. call get_geocode_degrees()
-    #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_names_list
+    #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_object_list
     #    - googlemaps geocode lat and lng will be used to lookup the city_id when calling get_city_id()
     #    - assign class_object.lat and class_object.lng with geocode lat and lng respectively
     #
     ###########################################################################################################
-    get_geocode_degrees(city_names_list, pb)
+    get_geocode_degrees(city_object_list, pb)
     time.sleep(.5)
 
     ###########################################################################################################
@@ -88,12 +86,12 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
     ###########################################################################################################
     #
     # 7. call get_city_id()
-    #    - get the city_id for each city in city_names_list
+    #    - get the city_id for each city in city_object_list
     #    - city_id will be used when getting the weather statistics for that city
     #    - assign city_object.owm_city_id = city_id
     #
     ###########################################################################################################
-    get_city_id(city_names_list, pb)
+    get_city_id(city_object_list, pb)
     time.sleep(.5)
 
     ###########################################################################################################
@@ -135,7 +133,7 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
     #    - the weather statistics for each city, country_or_state will be collected
     #
     ###########################################################################################################
-    get_owm_weather_data(city_names_list, owm_url_weather, owm_APIKEY, pb)
+    get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb)
     time.sleep(2)
 
     ###########################################################################################################
@@ -149,8 +147,15 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
     pb.query_complete = 0
 
     ###########################################################################################################
+    #
+    # 13. setup the attributes in class City with values to display in forecast report
+    #
+    ###########################################################################################################
+    setup_weather_report(city_object_list)
+
+    ###########################################################################################################
     # 
-    # 13. PRINT WELCOME TO FORECAST REPORT BANNER
+    # 14. PRINT WELCOME TO FORECAST REPORT BANNER
     #
     ###########################################################################################################
     clear_screen()
@@ -160,11 +165,11 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
 
     ###########################################################################################################
     #
-    # 14. call display_weather_report()
+    # 15. call display_weather_report()
     #     - the weather statistics for each city, country_or_state will be collected
     #
     ###########################################################################################################
-    display_weather_report(city_names_list)
+    display_weather_report(city_object_list)
     print('\n')
     print(" Press Ctrl-C to quit")
     time.sleep(20)
@@ -172,16 +177,14 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_names_list):
 # **** End of function run_weather_report() **** #
 
 
-def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
+def run_forecast_report(owm_url_forecast, owm_APIKEY, city_object_list):
 
     ###########################################################################################################
     #
     # args passed in to run_forecast_report()
     # - owm_url_forecast arg: api to forecast reports per city_id
     # - owm_APIKEY arg: api key for OpenWeatherMap pass in as a parameter to owm_url_weather
-    # - city_names_list arg: list of tuples (city_name, country_or_state) used to retrieve coordinates (lat/lon),
-    #   'city_id', etc. city_names_list is like the master list of city names and all data structures will need
-    #   to be in sync with the items in the list.
+    # - city_object_list arg: list of city objects for each city being tracked in forecast report
     #
     ###########################################################################################################
 
@@ -208,17 +211,17 @@ def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
     #
     ###########################################################################################################
     progress_bar_scale('geocode')
-    pb = ProgressBar(len(city_names_list))
+    pb = ProgressBar(len(city_object_list))
 
     ###########################################################################################################
     #
     # 2. call get_geocode_degrees()
-    #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_names_list
+    #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_object_list
     #    - googlemaps geocode lat and lng will be used to lookup the city_id when calling get_city_id()
     #    - assign class_object.lat and class_object.lng with geocode lat and lng respectively
     #
     ###########################################################################################################
-    get_geocode_degrees(city_names_list, pb)
+    get_geocode_degrees(city_object_list, pb)
     time.sleep(.5)
 
     ###########################################################################################################
@@ -256,12 +259,12 @@ def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
     ###########################################################################################################
     #
     # 6. call get_city_id()
-    #    - get the city_id for each city in city_names_list
+    #    - get the city_id for each city in city_object_list
     #    - city_id will be used when getting the forecast statistics for that city
     #    - assign city_object.owm_city_id = city_id
     #
     ###########################################################################################################
-    get_city_id(city_names_list, pb)
+    get_city_id(city_object_list, pb)
     time.sleep(.5)
 
     ###########################################################################################################
@@ -303,7 +306,7 @@ def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
     #    - the weather statistics for each city, country_or_state will be collected
     #
     ###########################################################################################################
-    get_owm_forecast_data(city_names_list, owm_url_forecast, owm_APIKEY, pb)
+    get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb)
     time.sleep(2)
 
     ###########################################################################################################
@@ -321,7 +324,7 @@ def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
     # 12. setup the attributes in class City with values to display in forecast report
     #
     ###########################################################################################################
-    setup_forecast_report(city_names_list)
+    setup_forecast_report(city_object_list)
 
     ###########################################################################################################
     # 
@@ -339,7 +342,7 @@ def run_forecast_report(owm_url_forecast, owm_APIKEY, city_names_list):
     #     - the weather statistics for each city, country_or_state will be collected
     #
     ###########################################################################################################
-    display_forecast_report(city_names_list)
+    display_forecast_report(city_object_list)
     print('\n')
     print(" Press Ctrl-C to quit")
     time.sleep(20)

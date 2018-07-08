@@ -19,12 +19,25 @@ class City():
 
         self.owm_city_id = 0         # OpenWeatherMap city_id
 
-        # current Weather attributes
+        #######################################################################################################################
+        #
+        # Weather attributes
+        #
+        #######################################################################################################################
         self.owm_weather_data  = {}           # json data from OpenWeatherMap api response
         self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
                                               # requests.get within 10 minutes intervals.
 
+        self.owm_temp        = 0
+        self.owm_wind        = 0
+        self.owm_visibility  = 0
+        self.owm_description = ''
+
+        #######################################################################################################################
+        #
         # Forecast attributes
+        #
+        #######################################################################################################################
         self.owm_forecast_data = {}           # json data from OpenWeatherMap api response
         self.owm_forecast_last_requests = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
                                               # requests.get within 10 minutes intervals.
@@ -74,6 +87,39 @@ class City():
         self.saturday_weather_description  = ''
 
     # **** End of City.__init__() **** #
+
+
+    def update_owm_temp(self):
+        self.owm_temp = self.owm_weather_data['main']['temp']
+
+    # **** End of City.update_owm_temp() **** #
+
+
+    def update_owm_wind(self):
+
+        try:
+            self.owm_wind = self.owm_weather_data['wind']['speed']
+        except:
+            self.owm_wind = 'Not Available'
+
+    # **** End of City.update_owm_wind() **** #
+
+
+    def update_owm_visibility(self):
+
+        try:
+            self.owm_visibility = self.owm_weather_data['visibility']
+        except:
+            self.owm_visibility = 'Not Available'
+
+    # **** End of City.update_owm_visibility() **** #
+
+
+    def update_owm_description(self):
+
+        self.owm_description = self.owm_weather_data['weather'][0]['description']
+
+    # **** End of City.update_owm_description() **** #
 
 
     def perform_owm_weather_api_query(self):
