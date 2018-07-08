@@ -28,7 +28,13 @@ owm_APIKEY = get_open_weather_map_api_key()
 city_names_list = []
 
 # an option, create a list of cities to track in weather and forecast report
-# if this option is chosen, then get_city_names_for_weather_report(city_names_list) will not be called
+# if this option is chosen, then get_city_names_for_weather_report(city_names_list) will NOT be called
+#
+# if this option is not chosen, remove the list below or comment the list assignment out.
+#
+# if you are tracking cities outside of the USA, you will need to enter the long name of the country.
+#
+# if you are tracking cities inside the USA, you will enter the abbreviation of the state.
 city_names_list = [('Georgetown', 'TX'), ('Angleton', 'TX'), ('Oak Harbor', 'WA'), ('Wells', 'NV')]
 
 if len(city_names_list) == 0:
@@ -38,43 +44,18 @@ if len(city_names_list) == 0:
 
 city_object_list = create_city_object_list(city_names_list)
 
-# create file execution_time_path with w+
-# remaining writes to this file will be done calling execution_TIME()
-f = open(execution_time_path, 'w+')
-f.close()
-
 loop_count = 1
+
+# while loop determines number of times to run the reports
 while loop_count != 1000:
-
-    # remaining writes to this file will be done calling execution_TIME() 
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: __main__() loop_count = {}  ".format(loop_count)
-    execution_TIME(time_message, 'start', start_time)
-
-    # add another carriage return to execution_time_path file.
-    f = open(execution_time_path, 'a')
-    f.write('\n')
-    f.close()
 
     # __main__() START
 
-    # run the current weather report
-    # run the 3 day forecast report
-    run_weather_report(owm_url_weather, owm_APIKEY, city_object_list)
-    run_forecast_report(owm_url_forecast, owm_APIKEY, city_object_list)
+    # run_report with report = 'weather')
+    # run_report with report = 'forecast')
+    run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, report = 'weather')
+    run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, report = 'forecast')
 
     # __main__() FINISHED
-
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: __main__() loop_count = {}  ".format(loop_count)
-    execution_TIME(time_message, 'finished', start_time, finished_time)
-
-    # add 3 additional carriage return to execution_time_path file.
-    # separates loop_counts in file with an extra carriage return (read-ability)
-    f = open(execution_time_path, 'a')
-    f.write('\n\n\n')
-    f.close()
 
     loop_count += 1

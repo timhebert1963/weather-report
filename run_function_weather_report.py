@@ -4,7 +4,16 @@ import time
 
 # **** End of imports **** #
 
-def run_weather_report(owm_url_weather, owm_APIKEY, city_object_list):
+###############################################################################################################
+#
+# 1 function and 1 class exists in this file
+# - def run_report()
+# - class ProgressBar()
+#
+###############################################################################################################
+
+
+def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, report):
 
     ###########################################################################################################
     #
@@ -17,27 +26,30 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_object_list):
 
     ###########################################################################################################
     # 
-    # 1. PRINT WELCOME TO FORECAST REPORT BANNER
+    # 1. PRINT WELCOME TO WEATHER OR FORECAST REPORT BANNER
     #
     ###########################################################################################################
     clear_screen()
     time.sleep(.5)
     print('\n')
-    welcome_to_weather_report_banner()
+
+    if report == 'weather':
+        welcome_to_weather_report_banner()
+    elif report == 'forecast':
+        welcome_to_forecast_report_banner()
 
     ###########################################################################################################
     # 
     # 2. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query 
-    #      progress
+    #    - a progress bar will be displayed to notify the user of the query progress
     #    - print the heading of the progress bar
     #    - create an instance of the class ProgressBar()
     #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
+    #    pb instance attributes are updated and evaluated during the 
+    #    query to determine progress of the geocode query.
     #
     ###########################################################################################################
-    progress_bar_scale('geocode')
+    progress_bar_scale()
     pb = ProgressBar(len(city_object_list))
 
     ###########################################################################################################
@@ -45,325 +57,119 @@ def run_weather_report(owm_url_weather, owm_APIKEY, city_object_list):
     # 3. call get_geocode_degrees()
     #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_object_list
     #    - googlemaps geocode lat and lng will be used to lookup the city_id when calling get_city_id()
-    #    - assign class_object.lat and class_object.lng with geocode lat and lng respectively
+    #    - will assign city.lat and city.lng with geocode lat and lng respectively
     #
     ###########################################################################################################
     get_geocode_degrees(city_object_list, pb)
-    time.sleep(.5)
+    time.sleep(1)
 
     ###########################################################################################################
     #
     # 4. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of stock queries. 
+    #    - need to assign to 0 now query is complete
+    #    - this will allow Progress Bar to start at 0% for the next "new" query. 
     #
     ###########################################################################################################
     pb.query_complete = 0
 
     ###########################################################################################################
-    # 
-    # 5. PRINT WELCOME TO FORECAST REPORT BANNER
     #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_weather_report_banner()
-
-    ###########################################################################################################
-    # 
-    # 6. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query progress
-    #    - print the heading of the progress bar
-    #    - create an instance of the class ProgressBar()
-    #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
-    #
-    ###########################################################################################################
-    progress_bar_scale('city_id')
-
-    ###########################################################################################################
-    #
-    # 7. call get_city_id()
+    # 5. call get_city_id()
     #    - get the city_id for each city in city_object_list
-    #    - city_id will be used when getting the weather statistics for that city
-    #    - assign city_object.owm_city_id = city_id
+    #    - city_id will be used when getting the weather or forecast statistics for that city
+    #    - assign city.owm_city_id = city_id
     #
     ###########################################################################################################
     get_city_id(city_object_list, pb)
-    time.sleep(.5)
+    time.sleep(1)
+
+    ###########################################################################################################
+    #
+    # 6. ASSIGN pb.query_complete = 0
+    #    - need to assign to 0 now that query is complete
+    #    - this will allow Progress Bar to start at 0% for the next "new" query.
+    #
+    ###########################################################################################################
+    pb.query_complete = 0
+
+    ###########################################################################################################
+    #
+    # 7. CHECK VALUE OF REPORT
+    #         if report   == 'weather':  call get_owm_weather_data()
+    #         elif report == 'forecast': call get_owm_forecast_data()
+    #
+    #     - get_owm_weather_data() and get_owm_forecast_data() will get json data and populate each city 
+    #       instance attributes.
+    #
+    ###########################################################################################################
+    if report == 'weather':
+        get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb)
+    elif report == 'forecast':
+        get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb)
+
+    time.sleep(2)
 
     ###########################################################################################################
     #
     # 8. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of
-    #      stock queries. 
-    #
-    ###########################################################################################################
-    pb.query_complete = 0
-
-    ###########################################################################################################
-    # 
-    # 9. PRINT WELCOME TO FORECAST REPORT BANNER
-    #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_weather_report_banner()
-
-    ###########################################################################################################
-    # 
-    # 10. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query progress
-    #    - print the heading of the progress bar
-    #    - create an instance of the class ProgressBar()
-    #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
-    #
-    ###########################################################################################################
-    progress_bar_scale('weather')
-
-    ###########################################################################################################
-    #
-    # 11. call get_owm_weather_data()
-    #    - the weather statistics for each city, country_or_state will be collected
-    #
-    ###########################################################################################################
-    get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb)
-    time.sleep(2)
-
-    ###########################################################################################################
-    #
-    # 12. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of
-    #      stock queries. 
+    #    - need to assign to 0 now that query is complete
+    #    - this will allow Progress Bar to start at 0% for the next "new" query.
     #
     ###########################################################################################################
     pb.query_complete = 0
 
     ###########################################################################################################
     #
-    # 13. setup the attributes in class City with values to display in forecast report
+    # 9. assign values to each city instance attributes for the weather or forecast report
     #
     ###########################################################################################################
-    setup_weather_report(city_object_list)
+    if report == 'weather':
+        setup_weather_report(city_object_list)
+    elif report == 'forecast':
+        setup_forecast_report(city_object_list)
 
     ###########################################################################################################
     # 
-    # 14. PRINT WELCOME TO FORECAST REPORT BANNER
+    # 10. PRINT WELCOME TO WEATHER OR FORECAST REPORT BANNER
     #
     ###########################################################################################################
     clear_screen()
     time.sleep(.5)
     print('\n')
-    welcome_to_weather_report_banner()
+
+    if report == 'weather':
+        welcome_to_weather_report_banner()
+    elif report == 'forecast':
+        welcome_to_forecast_report_banner()
 
     ###########################################################################################################
     #
-    # 15. call display_weather_report()
-    #     - the weather statistics for each city, country_or_state will be collected
+    # 11. call display_weather_report() or display_forecast_report()
+    #     - the statistics for each city, country_or_state report will be displayed to user.
     #
     ###########################################################################################################
-    display_weather_report(city_object_list)
+    if report == 'weather':
+        display_weather_report(city_object_list)
+    elif report == 'forecast':
+        display_forecast_report(city_object_list)
+
     print('\n')
     print(" Press Ctrl-C to quit")
     time.sleep(20)
 
-# **** End of function run_weather_report() **** #
-
-
-def run_forecast_report(owm_url_forecast, owm_APIKEY, city_object_list):
-
-    ###########################################################################################################
-    #
-    # args passed in to run_forecast_report()
-    # - owm_url_forecast arg: api to forecast reports per city_id
-    # - owm_APIKEY arg: api key for OpenWeatherMap pass in as a parameter to owm_url_weather
-    # - city_object_list arg: list of city objects for each city being tracked in forecast report
-    #
-    ###########################################################################################################
-
-    ###########################################################################################################
-    # 
-    # 1. PRINT WELCOME TO FORECAST REPORT BANNER
-    #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_forecast_report_banner()
-
-    ###########################################################################################################
-    # 
-    # 2. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query 
-    #      progress
-    #    - print the heading of the progress bar
-    #    - create an instance of the class ProgressBar()
-    #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
-    #
-    ###########################################################################################################
-    progress_bar_scale('geocode')
-    pb = ProgressBar(len(city_object_list))
-
-    ###########################################################################################################
-    #
-    # 2. call get_geocode_degrees()
-    #    - get the city, country_or_state lat and lng (latitude and longitude) for each city in city_object_list
-    #    - googlemaps geocode lat and lng will be used to lookup the city_id when calling get_city_id()
-    #    - assign class_object.lat and class_object.lng with geocode lat and lng respectively
-    #
-    ###########################################################################################################
-    get_geocode_degrees(city_object_list, pb)
-    time.sleep(.5)
-
-    ###########################################################################################################
-    #
-    # 3. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of stock queries. 
-    #
-    ###########################################################################################################
-    pb.query_complete = 0
-
-    ###########################################################################################################
-    # 
-    # 4. PRINT WELCOME TO FORECAST REPORT BANNER
-    #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_forecast_report_banner()
-
-    ###########################################################################################################
-    # 
-    # 5. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query progress
-    #    - print the heading of the progress bar
-    #    - create an instance of the class ProgressBar()
-    #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
-    #
-    ###########################################################################################################
-    progress_bar_scale('city_id')
-
-    ###########################################################################################################
-    #
-    # 6. call get_city_id()
-    #    - get the city_id for each city in city_object_list
-    #    - city_id will be used when getting the forecast statistics for that city
-    #    - assign city_object.owm_city_id = city_id
-    #
-    ###########################################################################################################
-    get_city_id(city_object_list, pb)
-    time.sleep(.5)
-
-    ###########################################################################################################
-    #
-    # 7. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of
-    #      stock queries. 
-    #
-    ###########################################################################################################
-    pb.query_complete = 0
-
-    ###########################################################################################################
-    # 
-    # 8. PRINT WELCOME TO FORECAST REPORT BANNER
-    #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_forecast_report_banner()
-
-    ###########################################################################################################
-    # 
-    # 9. PRINT HEADING OF PROGRESS BAR
-    #    - a progress bar will be displayed to notify user of the stock query progress
-    #    - print the heading of the progress bar
-    #    - create an instance of the class ProgressBar()
-    #
-    #    class ProgressBar() attributes are updated and evaluated during the 
-    #    stock queries to determine progress of the queries.
-    #
-    ###########################################################################################################
-    progress_bar_scale('weather')
-
-    ###########################################################################################################
-    #
-    # 10. call get_owm_forecast_data()
-    #    - the weather statistics for each city, country_or_state will be collected
-    #
-    ###########################################################################################################
-    get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb)
-    time.sleep(2)
-
-    ###########################################################################################################
-    #
-    # 11. ASSIGN pb.query_complete = 0
-    #    - need to assign to 0 now that all queries are complete
-    #    - this will allow Progress Bar to start at 0% for the next "new" set of
-    #      stock queries. 
-    #
-    ###########################################################################################################
-    pb.query_complete = 0
-
-    ###########################################################################################################
-    #
-    # 12. setup the attributes in class City with values to display in forecast report
-    #
-    ###########################################################################################################
-    setup_forecast_report(city_object_list)
-
-    ###########################################################################################################
-    # 
-    # 13. PRINT WELCOME TO FORECAST REPORT BANNER
-    #
-    ###########################################################################################################
-    clear_screen()
-    time.sleep(.5)
-    print('\n')
-    welcome_to_forecast_report_banner()
-
-    ###########################################################################################################
-    #
-    # 14. call display_forecast_report()
-    #     - the weather statistics for each city, country_or_state will be collected
-    #
-    ###########################################################################################################
-    display_forecast_report(city_object_list)
-    print('\n')
-    print(" Press Ctrl-C to quit")
-    time.sleep(20)
-
-# **** End of function run_forecast_report() **** #
+# **** End of function run_report() **** #
 
 
 class ProgressBar():
 
     ################################################################################
-    # class ProgressBar(): designed to measure the progress of stock quote queries
+    # class ProgressBar(): designed to measure the progress of queries
     #
-    # There will be 2 types of queries performed when getting stock quotes. 
-    #    1. current_day  quote query 
-    #    2. previous_day quote query
     #
-    # def __init__() will assign the length of the symbol_list * 2 (1 for each type 
-    # of query)
+    # def __init__() will assign the list_length of the city_object_list
     #
-    # length will be used to track the completion of each query (1 for each item in
-    # symbol_list)
+    # list_length will be used to track the completion for all cities for each query 
+    #
     ################################################################################
 
     def __init__(self, list_length):

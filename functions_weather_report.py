@@ -13,49 +13,10 @@ import googlemaps
 
 # **** End of imports **** #
 
-def execution_TIME(message, *args):
-
-    ############################################################################################
-    #
-    #   *args will have 2 or 3 arguments
-    #     - 2 args, 'start', start_time
-    #     - 3 args, 'finished', start_time, finished_time
-    #
-    #   execution_TIME() will write to file in execution_time_path. The content of the file will 
-    #   record the time a function started and finished and the number of seconds it took to
-    #   execute the function.
-    #
-    ############################################################################################
-    start = args[1]
-
-    if args[0] == 'start':
-
-        time = str(start.hour) + ':' + str(start.minute) + '.' + str(start.second) + '.' + str(start.microsecond)
-
-        message = message + "START TIME    = {}\n".format(time)
-
-    elif args[0] == 'finished':
-
-        finished = args[2]
-        time = str(finished.hour) + ':' + str(finished.minute) + '.' + str(finished.second) + '.' + str(finished.microsecond)
-        difference = (finished - start).total_seconds()
-
-        message = message + "FINISHED TIME = {}: TOTAL RUN TIME = {} seconds\n\n".format(time, difference)
-
-    # execution_time_path is imported - from paths_owm import *
-    f = open(execution_time_path, 'a')
-    f.write(message)
-    f.close()
-
-# **** End of function execution_TIME() **** #
-
 
 def welcome_to_weather_report_banner():
 
-    #first = 8
-    #mid   = 15 * 5
-    #last  = 30
-    #center = first + mid + last
+    # number of characters in each line. some characters can be a blank space.
     line_len = 118
 
     # assign string to display in display_banner()
@@ -80,15 +41,12 @@ def welcome_to_weather_report_banner():
 
 def welcome_to_forecast_report_banner():
 
-    #first = 8
-    #mid   = 15 * 5
-    #last  = 30
-    #center = first + mid + last
+    # number of characters in each line. some characters can be a blank space.
     line_len = 118
 
     # assign string to display in display_banner()
     first_string  = "Welcome to Forecast Report"
-    second_string = "Weather Forecast: displays 5 day Forecast for Weather Condition, Temperature, Wind and Visibility"
+    second_string = "Weather Forecast: displays 3 day Forecast for Temperature and Weather Condition"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/forecast? used for queries"
 
     first_string  = pad_banner_string(first_string, line_len)
@@ -149,7 +107,7 @@ def get_city_names_for_weather_report(city_names_list):
         valid_string = True
 
         while valid_string == True:
-            country_or_state = input(" Enter the long name for country or abbreviated state for the city of {}:  ".format(city)).upper()
+            country_or_state = input(" Enter long name of country or abbr. state for the city of {}:  ".format(city_name))
 
             # check for len(city) == 0
             # user pressed 'Enter' and did not input a string
@@ -164,6 +122,8 @@ def get_city_names_for_weather_report(city_names_list):
 
 
     def enter_more_city_names():
+
+        # find out if user would like to enter more cities to track in the reports
 
         is_answer_valid = False
 
@@ -183,11 +143,11 @@ def get_city_names_for_weather_report(city_names_list):
 
         print('\n')
 
-        city = input(" Enter the city name for Weather Report:  ").title()
+        city_name = input(" Enter the city name for Weather Report:  ").title()
 
         # check for len(city) == 0
         # user pressed 'Enter' and did not input a string
-        if len(city) == 0:
+        if len(city_name) == 0:
         	print(" A city name was not entered. Please Try Again.")
 
         else:
@@ -196,13 +156,18 @@ def get_city_names_for_weather_report(city_names_list):
 
             # check to ensure user entered a valid city, country_or_state
             # does_city_exist() will return True or False
-            result = does_city_exist(city, country_or_state)
+            result = geocode_db_does_city_exist(city_name, country_or_state)
+
+            # need to add geocode_db check on result
+            # need to add owm_db check on result
+            if result == True:
+                result = owm_db_does_city_exist(city_name, country_or_state)
 
             if not result:
                 print(" A valid city name was not entered. Please Try Again, and enter a valid city")
 
             else:
-                city_names_list.append((city, country_or_state))
+                city_names_list.append((city_name, country_or_state))
                 answer = enter_more_city_names()
 
                 if answer.lower() != 'y' and answer.lower()!= 'yes':
@@ -215,12 +180,7 @@ def get_city_names_for_weather_report(city_names_list):
 # **** End of function get_city_names_for_weather_report() **** #
 
 
-def does_city_exist(city, country_or_state):
-
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: does_city_exist() "
-    execution_TIME(time_message, 'start', start_time)
+def geocode_db_does_city_exist(city_name, country_or_state):
 
     ###########################################################################################################
     #
@@ -236,36 +196,84 @@ def does_city_exist(city, country_or_state):
     # start googlemaps Client
     gm = googlemaps.Client(key=geocode_api_key)
 
-    for i in range(len(gm.geocode((city, country_or_state))[0]['address_components'])):
+    try:
+        # protection against an invalid name. Prevent a crash gm.geocode key does not exist
 
-        try:
-            # get the long_name from geocode
-            name = gm.geocode((city, country_or_state))[0]['address_components'][i]['long_name']
+        for i in range(len(gm.geocode((city_name, country_or_state))[0]['address_components'])):
 
-            # compare the city name and name from geocode
-            # if true then return True
-            if city.lower() == name.lower():
+            try:
+                # get the long_name from geocode
+                name = gm.geocode((city_name, country_or_state))[0]['address_components'][i]['long_name']
 
-                # Log finished time
-                finished_time = datetime.now()
-                time_message = "TIME: does_city_exist() "
-                execution_TIME(time_message, 'finished', start_time, finished_time)
+                # compare the city name and name from geocode
+                # if true then return True
+                if city_name.lower() == name.lower():
 
-                return True
+                    return True
 
-        except Exception as message:
-            # catch exception messages and pass
-            pass
+            except Exception as message:
+                # catch exception messages and pass
+                pass
 
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: does_city_exist() "
-    execution_TIME(time_message, 'finished', start_time, finished_time)
+    except:
+        pass
 
     # if no match return False
     return False
 
-# **** End of function does_city_exist() **** #
+# **** End of function geocode_db_does_city_exist() **** #
+
+
+def owm_db_does_city_exist(city_name, country_or_state):
+
+    ###########################################################################################################
+    #
+    # Need to pass City ID to OpenWeatherMap api for accuracy
+    # - match the geocode lat and lon with the OpenWeatherMap lat and lon
+    # - when the match occurs then extract the city_id out of the OpenWeatherMap json dictionary
+    #
+    ###########################################################################################################
+
+    # open and read the file city.list.json which has the city_id
+    # owm_city_list_json_path is imported - from paths_owm import *
+    open_file = open(owm_city_list_json_path + 'city.list.json', 'r', encoding='utf-8')
+    read_file = json.loads(open_file.read())
+    open_file.close()
+
+    # loop through the read_file and assign owm_name
+    # if owm_name == city:
+    #     check to see if int(geocode_lat) == int(owm_lat) and int(geocode_lng) == int(owm_lon)
+    #     if this is true then assign city_id to   
+    for i in range(len(read_file)):
+        owm_name = read_file[i]['name']
+
+        if owm_name.lower() == city_name.lower():
+
+            return True
+
+    try:
+
+        # A customized file "may" exist for city, country entries not available in city.list.json
+        open_file = open(owm_city_list_json_path + 'customized.city.list.json', 'r', encoding='utf-8')
+        custom_file = json.loads(open_file.read())
+        open_file.close()
+
+        for i in range(len(custom_file)):
+
+            owm_name = custom_file[i]['name']
+
+            if owm_name.lower() == city_name.lower():
+
+                return True
+
+    except:
+        pass
+
+    # if owm_name.lower() == city.city_name.lower() did not find a match
+    # return False
+    return False
+
+# **** End of function owm_db_does_city_exist() **** #
 
 
 def create_city_object_list(city_names_list):
@@ -293,16 +301,14 @@ def create_city_object_list(city_names_list):
 
 def get_geocode_degrees(city_object_list, pb):
 
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: get_geocode_degrees() "
-    execution_TIME(time_message, 'start', start_time)
-
     # api_key for googlemaps geocode api
     geocode_api_key = os.environ['APIKEY']
     
     # start googlemaps Client
     gm = googlemaps.Client(key=geocode_api_key)
+
+    # call display_progress_bar_query_type to display query type
+    display_progress_bar_query_type('geocode')
 
     # loop through each item in city_object_list 
     # city_object_list = [city1_object, city2_object, etc..]
@@ -338,11 +344,6 @@ def get_geocode_degrees(city_object_list, pb):
         display_progress_bar(pb)
         time.sleep(.1)
 
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: get_geocode_degrees() "
-    execution_TIME(time_message, 'finished', start_time, finished_time)
-
 # **** End of function get_geocode_degrees() **** #
 
 
@@ -356,16 +357,14 @@ def get_city_id(city_object_list, pb):
     #
     ###########################################################################################################
 
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: get_city_id() "
-    execution_TIME(time_message, 'start', start_time)
-
     # open and read the file city.list.json which has the city_id
     # owm_city_list_json_path is imported - from paths_owm import *
-    open_file = open(owm_city_list_json_path, 'r', encoding='utf-8')
+    open_file = open(owm_city_list_json_path + 'city.list.json', 'r', encoding='utf-8')
     read_file = json.loads(open_file.read())
     open_file.close()
+
+    # call display_progress_bar_query_type to display query type
+    display_progress_bar_query_type('city_id')
 
     # loop through each item in city_object_list 
     # city_object_list = [city1_object, city2_object, etc..]
@@ -378,7 +377,10 @@ def get_city_id(city_object_list, pb):
             # loop through the read_file and assign owm_name
             # if owm_name == city:
             #     check to see if int(geocode_lat) == int(owm_lat) and int(geocode_lng) == int(owm_lon)
-            #     if this is true then assign city_id to   
+            #     if this is true then assign city_id to city.owm_city_id
+            # assign city_id_found = False - may need to do a lookup in customized.city.list.json
+            # if city is not found in city.list.json.
+            city_id_found = False  
             for i in range(len(read_file)):
                 try:
                     owm_name = read_file[i]['name']
@@ -403,18 +405,49 @@ def get_city_id(city_object_list, pb):
                        (int(city.geocode_lng) <= int(owm_lon + 2) and int(city.geocode_lng) >= int(owm_lon - 2)):
 
                         city.owm_city_id = owm_city_id
+                        city_id_found = True
+
                         break
+
+            # if city_id not found in city.list.json then try the custom.city.list.json file.
+            if city_id_found == False:
+                open_file = open(owm_city_list_json_path + 'customized.city.list.json', 'r', encoding='utf-8')
+                custom_file = json.loads(open_file.read())
+                open_file.close()
+
+                for i in range(len(custom_file)):
+                    try:
+                        owm_name = custom_file[i]['name']
+                    except:
+                        print("FATAL ERROR: get_city_id() {} does not exist in city.list.json file")
+                        print("Pause # *********************** #")
+                        print("PAUSE # *******  VERIFY  ****** #")
+                        input("Pause # *********************** #")
+
+                    if owm_name.lower() == city.city_name.lower():
+
+                        owm_city_id = custom_file[i]['id']
+                        owm_lat     = custom_file[i]['coord']['lat']
+                        owm_lon     = custom_file[i]['coord']['lon']
+
+                        # check to see if int(lat) and int(lon) are within a range of +2 or -2 for lat and lon
+                        # when comparing geocode and OpenWeatherMap coordinates. if this is True there is a match
+                        #
+                        # the coordinates between geocode and OpenWeatherMap are not always exactly the same but should
+                        # be within a tolerance of +2 or -2
+                        if (int(city.geocode_lat) <= int(owm_lat + 2) and int(city.geocode_lat) >= int(owm_lat - 2)) and \
+                           (int(city.geocode_lng) <= int(owm_lon + 2) and int(city.geocode_lng) >= int(owm_lon - 2)):
+
+                            city.owm_city_id = owm_city_id
+                            city_id_found = True
+
+                            break
 
         # progress bar for query progress
         pb.query_complete += 1
 
         display_progress_bar(pb)
         time.sleep(.1)
-
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: get_city_id() "
-    execution_TIME(time_message, 'finished', start_time, finished_time)
 
 # **** End of function get_city_id() **** #
 
@@ -447,10 +480,8 @@ def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
     #
     ###########################################################################################################
 
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: get_owm_weather_data() "
-    execution_TIME(time_message, 'start', start_time)
+    # call display_progress_bar_query_type to display query type
+    display_progress_bar_query_type('weather')
 
     # loop through each item in city_object_list 
     # city_object_list = [city1_object, city2_object, etc..]
@@ -476,11 +507,6 @@ def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
 
         display_progress_bar(pb)
         time.sleep(.2)
-
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: get_owm_weather_data() "
-    execution_TIME(time_message, 'finished', start_time, finished_time)
 
 # **** End of function get_owm_weather_data() **** #
 
@@ -550,7 +576,7 @@ def display_weather_report(city_object_list):
     last    = 25      # weather description
 
     city       = 'City'
-    weather    = 'Weather'
+    weather    = 'Weather Condition'
     temp       = 'Temperature'
     wind       = 'Wind'
     visibility = 'Visibility'
@@ -588,9 +614,12 @@ def display_weather_report(city_object_list):
         # unicode degree symbol
         degrees = "\u00B0"
 
-        # assign the city_temp string
-        city_temp     = int(city.owm_temp)
-        city_temp     = str(city_temp) + degrees + 'F'
+        if city.owm_temp != 'Not Available':
+            # assign the city_temp string
+            city_temp = int(city.owm_temp)
+            city_temp = str(city_temp) + degrees + 'F'
+        else:
+            city_temp = city.owm_temp
 
         # the 'wind' may or may not be part of dictionary try and expect will prevent the crash if not available
         if city.owm_wind != 'Not Available':
@@ -700,10 +729,8 @@ def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
     #
     ###########################################################################################################
 
-    # Log start time
-    start_time = datetime.now()
-    time_message = "TIME: get_owm_weather_data() "
-    execution_TIME(time_message, 'start', start_time)
+    # call display_progress_bar_query_type to display query type
+    display_progress_bar_query_type('forecast')
 
     # loop through each item in city_object_list 
     # city_object_list = [city1_object, city2_object, etc..]
@@ -717,7 +744,7 @@ def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
             data = requests.get(owm_url_forecast, params ={'id': city.owm_city_id, 'units': 'imperial', 'APPID': owm_APIKEY})
             data = data.json()
 
-            # REMOVE after completely debugged
+            # wrtite the json data to the file
             write_frf_json(data, city.city_name, city.country_or_state)
 
             city.owm_forecast_data = data
@@ -729,11 +756,6 @@ def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
 
         display_progress_bar(pb)
         time.sleep(.2)
-
-    # Log finished time
-    finished_time = datetime.now()
-    time_message = "TIME: get_owm_weather_data() "
-    execution_TIME(time_message, 'finished', start_time, finished_time)
 
 # **** End of function get_owm_forecast_data() **** #
 
@@ -778,8 +800,38 @@ def display_forecast_report(city_object_list):
 
     # **** End of function create_dashed_line_forecast_report() **** #
 
+
+    def pad_day_number_title(day, section):
+
+        length = section - len(day)
+
+        day = ' ' + day
+
+        for i in range(length - 2):
+            day = ' ' + day
+
+        day = day + ' '
+
+        return day
+
+    # **** End of function pad_day_number_title() **** #
+
     section      = 39      # length of each display section
     section_num  = 3       # number of display sections
+
+    print("  Three Day Forecast")
+    print('\n')
+
+    # titles displayed above dashed_line_string
+    day1_title = "Day 1 Forecast"
+    day2_title = "Day 2 Forecast"
+    day3_title = "Day 3 Forecast"
+
+    day1_title = pad_day_number_title(day1_title, section)
+    day2_title = pad_day_number_title(day2_title, section)
+    day3_title = pad_day_number_title(day3_title, section)
+
+    print(" {}{}{}".format(day1_title, day2_title, day3_title))
 
     # create dashed line
     dashed_line_string = create_dashed_line_forecast_report(section, section_num)
@@ -790,8 +842,7 @@ def display_forecast_report(city_object_list):
     blank_row = pad_forecast_strings(blank1, blank2, section)
     blank_row = (Back.BLACK + blank_row + Style.RESET_ALL)
 
-    print("  Three Day Forecast")
-
+    # color_count used to change colorama colors of text
     color_count = 0
 
     # loop through each item in city_object_list 
@@ -984,29 +1035,51 @@ def get_weather_descriptions(three_days, city):
 # **** End of function get_weather_descriptions() **** #
 
 
-def progress_bar_scale(query_type):
+def progress_bar_scale():
     
     # create a progress bar
     blank = ' '
     print("{:>22}{}{:>24}{:>23}{:>23}{:>26}".format(blank, '0', '25%', '50%', '75%', '100%'))
 
+# **** End of progress_bar_scale() **** #
+
+
+def display_progress_bar_query_type(query_type):
+
+    # sets up the title/query type for the query being requested
+    # it is done this way so each query can over-write the previous query progress
+    # display_progress_bar() will append to the print line with the actual progress indication
+
     if query_type == 'geocode':
-        print(" Geocode Queries     ", end="")
+        print(" Geocode Queries     ", end="", flush=True)
 
     elif query_type == 'city_id':
-        print(" City ID Queries     ", end="")
+        blank_line = '\r'
+        for i in range(119):
+            blank_line = blank_line + ' '
+        print(blank_line, end='', flush=True)
+        print("\r City ID Queries     ", end="", flush=True)
 
     elif query_type == 'weather':
-        print(" Weather Queries     ", end="")
+        blank_line = '\r'
+        for i in range(119):
+            blank_line = blank_line + ' '
+        print(blank_line, end='', flush=True)
+        print("\r Weather Queries     ", end="", flush=True)
 
-# **** End of progress_bar_scale() **** #
+    elif query_type == 'forecast':
+        blank_line = '\r'
+        for i in range(119):
+            blank_line = blank_line + ' '
+        print(blank_line, end='', flush=True)
+        print("\r Forecast Queries    ", end="", flush=True)
 
 
 def display_progress_bar(pb):
 
     # pbar is the progress bar (colored bar)
     pbar = ''
-    
+
     for i in range(pb.progress_units):
         pbar = pbar + (Back.GREEN + ' ' + Style.RESET_ALL)
 
@@ -1024,9 +1097,11 @@ def display_progress_bar(pb):
         for i in range(pbar_remaining):
             pbar = pbar + (Back.GREEN + ' ' + Style.RESET_ALL)
 
-        print(pbar)
+        # append to the printed line started by display_progress_bar_query_type()
+        print(pbar, end="", flush=True)
 
     else:
-        print(pbar, end="")
+        # append to the printed line started by display_progress_bar_query_type()
+        print(pbar, end="", flush=True)
 
 # **** End of display_progress_bar() **** #

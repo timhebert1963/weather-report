@@ -28,10 +28,10 @@ class City():
         self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
                                               # requests.get within 10 minutes intervals.
 
-        self.owm_temp        = 0
-        self.owm_wind        = 0
-        self.owm_visibility  = 0
-        self.owm_description = ''
+        self.owm_temp        = 0    # assign 0  will be updated with current temperature after query
+        self.owm_wind        = 0    # assign 0  will be updated with current wind speed  after query
+        self.owm_visibility  = 0    # assign 0  will be updated with current visibility  after query
+        self.owm_description = ''   # assign '' will be updated with current description after query
 
         #######################################################################################################################
         #
@@ -90,13 +90,19 @@ class City():
 
 
     def update_owm_temp(self):
-        self.owm_temp = self.owm_weather_data['main']['temp']
+
+        # 'temp' key is not always avaialable in the owm_weather_data dictionary
+        try:
+            self.owm_temp = self.owm_weather_data['main']['temp']
+        except:
+            self.owm_temp = 'Not Available'
 
     # **** End of City.update_owm_temp() **** #
 
 
     def update_owm_wind(self):
 
+        # 'wind' key is not always present in the owm_weather_data dictionary
         try:
             self.owm_wind = self.owm_weather_data['wind']['speed']
         except:
@@ -107,6 +113,7 @@ class City():
 
     def update_owm_visibility(self):
 
+        # 'visibility' key is not always present in the owm_weather_data dictionary
         try:
             self.owm_visibility = self.owm_weather_data['visibility']
         except:
@@ -117,7 +124,11 @@ class City():
 
     def update_owm_description(self):
 
-        self.owm_description = self.owm_weather_data['weather'][0]['description']
+        # 'description' key is not always present in the owm_weather_data dictionary
+        try:
+            self.owm_description = self.owm_weather_data['weather'][0]['description']
+        except:
+            self.owm_description = 'Not Available'
 
     # **** End of City.update_owm_description() **** #
 
@@ -219,6 +230,9 @@ class City():
 
     def find_temp_max(self):
 
+        # determine the max temperature from the forecast query for each day of the week
+        # update self.<weekday_name>_high_temp if high_temp is greater.
+
         forecast_list = self.owm_forecast_data['list']
 
         for i in range(len(forecast_list)):
@@ -318,7 +332,8 @@ class City():
 
     def set_weather_description(self):
 
-        # weather codes and descriptions
+        # owm_codes dictionary consists of weather codes and description for each code
+        # owm_codes dictionary will be used as a lookup for the 'description' value
         owm_codes = {'codes':{
         '200':{'code': 200, 'description': 'thunderstorm with light rain',   'icon': '11d'},
         '201':{'code': 201, 'description': 'thunderstorm with rain',         'icon': '11d'},
@@ -381,7 +396,7 @@ class City():
         '804':{'code': 804, 'description': 'overcast clouds',                'icon': '04d'}
         } }
 
-        # get the desription from the owm_codes dictionary and update the self.<weekday weather_description>
+        # get the desription from the owm_codes dictionary and update the self.<weekday_name>_weather_description
 
         if self.sunday_weather_code != 0:
             weather_code = str(self.sunday_weather_code)
@@ -417,6 +432,7 @@ class City():
     def return_three_day_weekday_names(self):
 
         # returns a list of the first day plus the 2 days after
+        # used during the 'forecast' query
 
         if self.sunday == True:
             three_day_list = ['Sunday', 'Monday', 'Tuesday']
