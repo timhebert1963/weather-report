@@ -44,6 +44,8 @@ if len(city_names_list) == 0:
 
 city_object_list = create_city_object_list(city_names_list)
 
+get_city_coordinates(city_object_list)
+
 loop_count = 1
 
 # while loop determines number of times to run the reports

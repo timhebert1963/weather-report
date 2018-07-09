@@ -6,37 +6,26 @@ import time
 
 ###############################################################################################################
 #
-# 1 function and 1 class exists in this file
+# Two function and one class exists in this file
+# - get_city_coordinates()
 # - def run_report()
 # - class ProgressBar()
 #
 ###############################################################################################################
 
 
-def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, report):
-
-    ###########################################################################################################
-    #
-    # args passed in to run_weather_report()
-    # - owm_url_weather arg: api to weather reports per city_id
-    # - owm_APIKEY arg: api key for OpenWeatherMap pass in as a parameter to owm_url_weather
-    # - city_object_list arg: list of city objects for each city being tracked in weather report
-    #
-    ###########################################################################################################
+def get_city_coordinates(city_object_list):
 
     ###########################################################################################################
     # 
-    # 1. PRINT WELCOME TO WEATHER OR FORECAST REPORT BANNER
+    # 1. PRINT WELCOME BANNER
     #
     ###########################################################################################################
     clear_screen()
     time.sleep(.5)
     print('\n')
 
-    if report == 'weather':
-        welcome_to_weather_report_banner()
-    elif report == 'forecast':
-        welcome_to_forecast_report_banner()
+    welcome_banner()
 
     ###########################################################################################################
     # 
@@ -92,9 +81,52 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
     ###########################################################################################################
     pb.query_complete = 0
 
+# **** End of function get_city_coordinates() **** #
+
+
+def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, report):
+
     ###########################################################################################################
     #
-    # 7. CHECK VALUE OF REPORT
+    # args passed in to run_report()
+    # - owm_url_weather arg: api to weather reports per city_id
+    # - owm_APIKEY arg: api key for OpenWeatherMap pass in as a parameter to owm_url_weather
+    # - city_object_list arg: list of city objects for each city being tracked in weather report
+    # - report: determines if this will be a 'weather' report or a 'forecast' report
+    #
+    ###########################################################################################################
+
+    ###########################################################################################################
+    # 
+    # 1. PRINT WEATHER OR FORECAST REPORT BANNER
+    #
+    ###########################################################################################################
+    clear_screen()
+    time.sleep(.5)
+    print('\n')
+
+    if report == 'weather':
+        weather_report_banner()
+    elif report == 'forecast':
+        forecast_report_banner()
+
+    ###########################################################################################################
+    # 
+    # 2. PRINT HEADING OF PROGRESS BAR
+    #    - a progress bar will be displayed to notify the user of the query progress
+    #    - print the heading of the progress bar
+    #    - create an instance of the class ProgressBar()
+    #
+    #    pb instance attributes are updated and evaluated during the 
+    #    query to determine progress of the geocode query.
+    #
+    ###########################################################################################################
+    progress_bar_scale()
+    pb = ProgressBar(len(city_object_list))
+
+    ###########################################################################################################
+    #
+    # 3. CHECK VALUE OF REPORT
     #         if report   == 'weather':  call get_owm_weather_data()
     #         elif report == 'forecast': call get_owm_forecast_data()
     #
@@ -111,7 +143,7 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
 
     ###########################################################################################################
     #
-    # 8. ASSIGN pb.query_complete = 0
+    # 4. ASSIGN pb.query_complete = 0
     #    - need to assign to 0 now that query is complete
     #    - this will allow Progress Bar to start at 0% for the next "new" query.
     #
@@ -120,7 +152,7 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
 
     ###########################################################################################################
     #
-    # 9. assign values to each city instance attributes for the weather or forecast report
+    # 5. assign values to each city instance attributes for the weather or forecast report
     #
     ###########################################################################################################
     if report == 'weather':
@@ -130,7 +162,7 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
 
     ###########################################################################################################
     # 
-    # 10. PRINT WELCOME TO WEATHER OR FORECAST REPORT BANNER
+    # 6. PRINT WEATHER OR FORECAST REPORT BANNER
     #
     ###########################################################################################################
     clear_screen()
@@ -138,13 +170,13 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
     print('\n')
 
     if report == 'weather':
-        welcome_to_weather_report_banner()
+        weather_report_banner()
     elif report == 'forecast':
-        welcome_to_forecast_report_banner()
+        forecast_report_banner()
 
     ###########################################################################################################
     #
-    # 11. call display_weather_report() or display_forecast_report()
+    # 7. call display_weather_report() or display_forecast_report()
     #     - the statistics for each city, country_or_state report will be displayed to user.
     #
     ###########################################################################################################

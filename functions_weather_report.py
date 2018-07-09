@@ -14,14 +14,43 @@ import googlemaps
 # **** End of imports **** #
 
 
-def welcome_to_weather_report_banner():
+def welcome_banner():
 
     # number of characters in each line. some characters can be a blank space.
     line_len = 118
 
     # assign string to display in display_banner()
-    first_string  = "Welcome to Weather Report"
-    second_string = "Weather Report: displays Weather Condition, Temperature, Wind and Visibility"
+    first_string  = "Welcome to the Weather and Forecast Report"
+    second_string = "Weather Report: Current Weather, Temperature, Wind and Visibility"
+    third_string  = "Forecast Report: Three day Forecast of Temperatures and Weather Conditions"
+    fourth_string = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
+
+    first_string  = pad_banner_string(first_string, line_len)
+    second_string = pad_banner_string(second_string, line_len)
+    third_string  = pad_banner_string(third_string, line_len)
+    fourth_string = pad_banner_string(fourth_string, line_len)
+
+    print(first_string)
+    print('\n')
+    print(second_string)
+    print('\n')
+    print(third_string)
+    print('\n')
+    print(fourth_string)
+    print('\n')
+    print('\n')
+
+# **** End of welcome_to_stock_quotes_banner() **** #
+
+
+def weather_report_banner():
+
+    # number of characters in each line. some characters can be a blank space.
+    line_len = 118
+
+    # assign string to display in display_banner()
+    first_string  = "The Weather Report"
+    second_string = "Current Weather, Temperature, Wind and Visibility"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
 
     first_string  = pad_banner_string(first_string, line_len)
@@ -34,19 +63,18 @@ def welcome_to_weather_report_banner():
     print('\n')
     print(third_string)
     print('\n')
-    print('\n')
 
-# **** End of welcome_to_stock_quotes_banner() **** #
+# **** End of weather_report_banner() **** #
 
 
-def welcome_to_forecast_report_banner():
+def forecast_report_banner():
 
     # number of characters in each line. some characters can be a blank space.
     line_len = 118
 
     # assign string to display in display_banner()
-    first_string  = "Welcome to Forecast Report"
-    second_string = "Weather Forecast: displays 3 day Forecast for Temperature and Weather Condition"
+    first_string  = "The Forecast Report"
+    second_string = "Three day Forecast of Temperatures and Weather Conditions"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/forecast? used for queries"
 
     first_string  = pad_banner_string(first_string, line_len)
@@ -59,9 +87,8 @@ def welcome_to_forecast_report_banner():
     print('\n')
     print(third_string)
     print('\n')
-    print('\n')
 
-# **** End of welcome_to_stock_quotes_banner() **** #
+# **** End of forecast_report_banner() **** #
 
 
 def pad_banner_string(string, line_len):
@@ -589,8 +616,6 @@ def display_weather_report(city_object_list):
 
     dashed_line_string = create_dashed_line(first, second, mid, mid_num, last)
 
-    print('\n')
-    print('\n')
     print(" Weather Report")
     print('\n')
     print(" {}{}{}{}{}".format(city, weather, temp, wind, visibility))
@@ -820,7 +845,6 @@ def display_forecast_report(city_object_list):
     section_num  = 3       # number of display sections
 
     print("  Three Day Forecast")
-    print('\n')
 
     # titles displayed above dashed_line_string
     day1_title = "Day 1 Forecast"
@@ -1061,18 +1085,10 @@ def display_progress_bar_query_type(query_type):
         print("\r City ID Queries     ", end="", flush=True)
 
     elif query_type == 'weather':
-        blank_line = '\r'
-        for i in range(119):
-            blank_line = blank_line + ' '
-        print(blank_line, end='', flush=True)
-        print("\r Weather Queries     ", end="", flush=True)
+        print(" Weather Queries     ", end="")
 
     elif query_type == 'forecast':
-        blank_line = '\r'
-        for i in range(119):
-            blank_line = blank_line + ' '
-        print(blank_line, end='', flush=True)
-        print("\r Forecast Queries    ", end="", flush=True)
+        print(" Forecast Queries    ", end="")
 
 
 def display_progress_bar(pb):
