@@ -5,6 +5,7 @@ from datetime import datetime
 from colorama import Fore, Back, Style, init
 init(autoreset = True)
 
+import sys
 import time
 import requests
 import json
@@ -1139,13 +1140,17 @@ def ctrl_c_to_quit(loop_range):
     # Press Ctrl-C to quit will flash on the screen
 
     for i in range(loop_range):
-        print("\r Press Ctrl-C to quit", end='', flush=True),
-        time.sleep(1)
-        print("\r                     ", end='', flush=True)
-        time.sleep(.5)
-        print("\r Press Ctrl-C to quit", end='', flush=True)
-        time.sleep(1)
-        print("\r                     ", end='', flush=True)
-        time.sleep(.5)
+        try:
+            print("\r Press Ctrl-C to quit", end='', flush=True),
+            time.sleep(1)
+            print("\r                     ", end='', flush=True)
+            time.sleep(.5)
+            print("\r Press Ctrl-C to quit", end='', flush=True)
+            time.sleep(1)
+            print("\r                     ", end='', flush=True)
+            time.sleep(.5)
+        except KeyboardInterrupt:
+            print('\n')
+            sys.exit(0) # exit
 
 # **** End of ctrl_c_to_quit() **** #
