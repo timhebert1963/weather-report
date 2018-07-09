@@ -486,7 +486,7 @@ def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
         # owm = 'OpenWeatherMap'
         # wrf - 'weather report file'
         # owm_wrf_by_city_path imported - from paths_owm import *
-        file = owm_wrf_by_city_path + '{}_{}'.format(city_name, country_or_state) + '.json'
+        file = owm_wrf_by_city_path + '{}_{}_wrf'.format(city_name, country_or_state) + '.json'
 
         with open(file, 'w+') as outfile:
             json.dump(data, outfile, indent=1, ensure_ascii=False)
@@ -733,7 +733,7 @@ def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
         # owm = 'OpenWeatherMap'
         # frf - 'forecast report file'
         # owm_frf_by_city_path imported - from paths_owm import *
-        file = owm_frf_by_city_path + '{}_{}'.format(city_name, country_or_state) + '.json'
+        file = owm_frf_by_city_path + '{}_{}_frf'.format(city_name, country_or_state) + '.json'
 
         with open(file, 'w+') as outfile:
             json.dump(data, outfile, indent=1, ensure_ascii=False)
