@@ -37,11 +37,17 @@ city_names_list = []
 # if you are tracking cities inside the USA, you will enter the abbreviation of the state.
 city_names_list = [('Georgetown', 'TX'), ('Angleton', 'TX'), ('Oak Harbor', 'WA'), ('Wells', 'NV')]
 
+# if city_names_list is an empty list call get_city_names_for_weather_report(city_names_list)
+# - user will have to enter each city and country or state to be tracked
 if len(city_names_list) == 0:
     clear_screen()
-    print('\n')
     city_names_list = get_city_names_for_weather_report(city_names_list)
 
+# now that all cities to be tracked are known, pass in city_names_list to create_city_object_list(city_names_list).
+# the return will be a list of city instances (one for each city being tracked) of the class CITY().
+#
+# city_names_list will no longer be used.
+# city_object_list will be used after this call is done.
 city_object_list = create_city_object_list(city_names_list)
 
 get_city_coordinates(city_object_list)

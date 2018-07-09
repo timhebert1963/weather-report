@@ -1,6 +1,6 @@
 
 Python version 3.6.4
-Only tested on Windows 8.1
+** Only tested on Windows 8.1 **
 
 Requirements:
 

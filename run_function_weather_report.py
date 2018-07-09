@@ -186,8 +186,7 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
         display_forecast_report(city_object_list)
 
     print('\n')
-    print(" Press Ctrl-C to quit")
-    time.sleep(20)
+    ctrl_c_to_quit(loop_range=7)
 
 # **** End of function run_report() **** #
 

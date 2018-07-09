@@ -28,10 +28,11 @@ class City():
         self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
                                               # requests.get within 10 minutes intervals.
 
-        self.owm_temp        = 0    # assign 0  will be updated with current temperature after query
-        self.owm_wind        = 0    # assign 0  will be updated with current wind speed  after query
-        self.owm_visibility  = 0    # assign 0  will be updated with current visibility  after query
-        self.owm_description = ''   # assign '' will be updated with current description after query
+        self.owm_weather_code = 0    # assign 0  will be updated with current weather code after query
+        self.owm_description  = ''   # assign '' will be updated with current description after query
+        self.owm_temp         = 0    # assign 0  will be updated with current temperature after query
+        self.owm_wind         = 0    # assign 0  will be updated with current wind speed  after query
+        self.owm_visibility   = 0    # assign 0  will be updated with current visibility  after query
 
         #######################################################################################################################
         #

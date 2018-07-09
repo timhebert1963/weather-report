@@ -1,4 +1,5 @@
 from modules_weather_report import *
+from Tim_common import *
 from paths_owm import *
 from datetime import datetime
 from colorama import Fore, Back, Style, init
@@ -134,11 +135,19 @@ def get_city_names_for_weather_report(city_names_list):
         valid_string = True
 
         while valid_string == True:
-            country_or_state = input(" Enter long name of country or abbr. state for the city of {}:  ".format(city_name))
+
+            print('\n')
+            print(" If the city is in the USA provide an abbreviated state name.")
+            print(" If the city is outside the USA provide a long name for the country.")
+            print('\n')
+            country_or_state = input(" Please enter the country or the state for the city of {}:  ".format(city_name))
+            print('\n')
 
             # check for len(city) == 0
             # user pressed 'Enter' and did not input a string
             if len(country_or_state) == 0:
+                clear_screen()
+                time.sleep(.5)
                 print(" A country or state name was not entered. Please Try Again.")
 
             else:
@@ -154,6 +163,8 @@ def get_city_names_for_weather_report(city_names_list):
 
         is_answer_valid = False
 
+        clear_screen()
+
         while not is_answer_valid:
             answer = input(" Do you want to add another city to the Weather Report? 'y' or 'n'  ")
 
@@ -168,14 +179,15 @@ def get_city_names_for_weather_report(city_names_list):
 
     while enter_city_names == True:
 
-        print('\n')
-
-        city_name = input(" Enter the city name for Weather Report:  ").title()
+        #print('\n')
+        city_name = input(" Enter the city name for the Weather Report:  ").title()
 
         # check for len(city) == 0
         # user pressed 'Enter' and did not input a string
         if len(city_name) == 0:
-        	print(" A city name was not entered. Please Try Again.")
+            clear_screen()
+            time.sleep(.5)
+            print(" A city name was not entered. Please Try Again.")
 
         else:
 
@@ -691,7 +703,6 @@ def display_weather_report(city_object_list):
         print(" {}{}{}{}{}".format(city_string, weather_descr, city_temp, city_wind, city_visibility))
 
     print(dashed_line_string)
-    print('\n')
 
 # **** End of function display_weather_report() **** #
 
@@ -1121,3 +1132,20 @@ def display_progress_bar(pb):
         print(pbar, end="", flush=True)
 
 # **** End of display_progress_bar() **** #
+
+
+def ctrl_c_to_quit(loop_range):
+
+    # Press Ctrl-C to quit will flash on the screen
+
+    for i in range(loop_range):
+        print("\r Press Ctrl-C to quit", end='', flush=True),
+        time.sleep(1)
+        print("\r                     ", end='', flush=True)
+        time.sleep(.5)
+        print("\r Press Ctrl-C to quit", end='', flush=True)
+        time.sleep(1)
+        print("\r                     ", end='', flush=True)
+        time.sleep(.5)
+
+# **** End of ctrl_c_to_quit() **** #
