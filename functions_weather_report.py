@@ -9,7 +9,6 @@ import sys
 import time
 import requests
 import json
-import codecs
 import os
 import googlemaps
 
@@ -67,6 +66,30 @@ def weather_report_banner():
     print('\n')
 
 # **** End of weather_report_banner() **** #
+
+
+def gather_current_weather_data_banner():
+
+    # number of characters in each line. some characters can be a blank space.
+    line_len = 118
+
+    # assign string to display in display_banner()
+    first_string  = "Collecting Current Weather Data"
+    second_string = "Preparing for Forecast Report"
+    third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
+
+    first_string  = pad_banner_string(first_string, line_len)
+    second_string = pad_banner_string(second_string, line_len)
+    third_string  = pad_banner_string(third_string, line_len)
+
+    print(first_string)
+    print('\n')
+    print(second_string)
+    print('\n')
+    print(third_string)
+    print('\n')
+
+# **** End of forecast_report_banner() **** #
 
 
 def forecast_report_banner():
@@ -492,6 +515,83 @@ def get_city_id(city_object_list, pb):
 # **** End of function get_city_id() **** #
 
 
+def setup_local_tz_attributes(city_object_list):
+
+    # setup_local_tz_attributes() will update the city instance attributes
+    # city instance attribute local_timeone
+    # city instance attribute local_tz_dt_txt
+    # city instance attribute local_weekday_name
+    for city in city_object_list:
+        city.update_local_timezone()
+        city.update_local_tz_dt_txt()
+        city.update_local_weekday_name()
+
+# **** End of function setup_local_tz_attributes() **** #
+
+
+def setup_forecast_attributes(city_object_list):
+
+    # setup_forecast_attributes() will assign forecast attributes to the values of weather attributes
+    # this is setting up for the forecast report
+    for city in city_object_list:
+
+        # updating the city instance attributes
+        # self.<weekday name>_weather_code = self.owm_weather_code
+        # self.<weekday name>_high_temp    = self.owm_temp
+        # self.<weekday name>_weather_description = self.owm_description
+        city.update_first_weather_code()
+        city.update_first_high_temp()
+        city.update_first_description()
+
+# **** End of function setup_forecast_attributes() **** #
+
+
+def ensure_weather_report_is_run(city_object_list, owm_url_weather, owm_APIKEY):
+
+    # ensure_weather_report_is_run() will verify that weather report has been run for each city instance
+    # if city.owm_weather_report_run == True the weather report has been run
+    # if city.owm_weather_report_run == False the weather report has not been run
+    # - run the weather report
+    #
+    # the 1st city instance needs to be checked. weather report is not run for single instances.
+    city = city_object_list[0]
+    if city.owm_weather_report_run == False or city.perform_owm_weather_api_query() == True:
+
+        # display banner
+        clear_screen()
+        time.sleep(.5)
+        print('\n')
+
+        gather_current_weather_data_banner()
+
+        # display progress bar scale
+        pb = ProgressBar(len(city_object_list))
+        progress_bar_scale()
+
+        # get the current weather data for each city
+        get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb)
+
+        # assign pb.query_complete = 0
+        #   - need to assign to 0 now that query is complete
+        #   - this will allow Progress Bar to start at 0% for the next "new" query.
+        pb.query_complete = 0
+
+        # assign the weather data to city instances
+        setup_weather_report(city_object_list)
+
+        # assign the timezone attributes
+        setup_local_tz_attributes(city_object_list)
+
+        # move the current weather data to forecast attributes for the 1st day
+        setup_forecast_attributes(city_object_list)
+
+        clear_screen()
+        time.sleep(.5)
+        print('\n')
+
+# **** End of function ensure_weather_report_is_run() **** #
+
+
 def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
 
     def write_wrf_json(data, city_name, country_or_state):
@@ -548,6 +648,11 @@ def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
         display_progress_bar(pb)
         time.sleep(.2)
 
+        # 1. update city.owm_weather_report_run to True indicating weather report has been run for current city
+        #    city this will be used by 'forecast' report to determine if current weather needs to be used during 
+        #    forecast report
+        city.owm_weather_report_run = True
+
 # **** End of function get_owm_weather_data() **** #
 
 
@@ -558,6 +663,7 @@ def setup_weather_report(city_object_list):
     # assigns updated values for attributes in city object
     for city in city_object_list:
 
+        city.update_owm_weather_code()
         city.update_owm_temp()
         city.update_owm_wind()
         city.update_owm_visibility()
@@ -803,9 +909,8 @@ def setup_forecast_report(city_object_list):
     # assigns updated values for attributes in city object
     for city in city_object_list:
 
-        city.forecast_first_weekday_name()
         city.find_temp_max()
-        city.find_highest_weather_code()
+        city.find_highest_priority_weather_code()
         city.set_weather_description()
 
 # **** End of function setup_forecast_report() **** #
@@ -873,6 +978,9 @@ def display_forecast_report(city_object_list):
     dashed_line_string = create_dashed_line_forecast_report(section, section_num)
 
     # create blank row
+    #
+    # each row in each section has 2 variables. blank1 and blank2 represent the 2 variables
+    # for the blank row
     blank1    = ' '
     blank2    = ' '
     blank_row = pad_forecast_strings(blank1, blank2, section)

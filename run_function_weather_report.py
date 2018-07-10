@@ -1,4 +1,5 @@
 from functions_weather_report import *
+from modules_weather_report import *
 from Tim_common import *
 import time
 
@@ -108,6 +109,10 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
     if report == 'weather':
         weather_report_banner()
     elif report == 'forecast':
+        # ensure_weather_report_is_run() is done in case the 'weather' report is not called
+        # the 'forecast' report will need current weather data for each city
+        # if the 'weather' report was run prior then ensure_weather_report_is_run() is a no-op.
+        ensure_weather_report_is_run(city_object_list, owm_url_weather, owm_APIKEY)
         forecast_report_banner()
 
     ###########################################################################################################
@@ -154,9 +159,32 @@ def run_report(owm_url_weather, owm_url_forecast, owm_APIKEY, city_object_list, 
     #
     # 5. assign values to each city instance attributes for the weather or forecast report
     #
+    #    if report == 'weather':
+    #        setup_weather_report(city_object_list)
+    #          - city.update_owm_weather_code()
+    #          - city.update_owm_temp()
+    #          - city.update_owm_wind()
+    #          - city.update_owm_visibility()
+    #          - city.update_owm_description()
+    #
+    #    if report == 'forecast':
+    #        setup_local_tz_attributes(city_object_list) will be called to update the
+    #          - city instance attribute local_timeone
+    #          - city instance attribute local_tz_dt_txt
+    #          - city instance attribute local_weekday_name
+    #
+    #        this is done because the json data from the OpenWeathermap forecast query may not have current 
+    #        day data. The forecast query will stop tracking current day at 18:00 o'clock.
+    #
+    #        The 3 day forecast report will always show current day of the city and teh current weather for 
+    #        the 1st day of the 3 day forecast report.
+    #
     ###########################################################################################################
     if report == 'weather':
         setup_weather_report(city_object_list)
+        setup_local_tz_attributes(city_object_list)
+        setup_forecast_attributes(city_object_list)
+
     elif report == 'forecast':
         setup_forecast_report(city_object_list)
 

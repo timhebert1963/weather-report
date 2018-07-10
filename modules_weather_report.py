@@ -1,7 +1,36 @@
 from datetime import datetime
+from timezonefinder import TimezoneFinder
+from weather_codes_with_priority import *
+
 import calendar
+import pytz
 
 # **** End of imports **** #
+
+
+class ProgressBar():
+
+    ################################################################################
+    # class ProgressBar(): designed to measure the progress of queries
+    #
+    #
+    # def __init__() will assign the list_length of the city_object_list
+    #
+    # list_length will be used to track the completion for all cities for each query 
+    #
+    ################################################################################
+
+    def __init__(self, list_length):
+
+        self.list_length = list_length  # queries performed against list
+        self.query_complete = 0
+        self.display_width  = 95   # number of characters in each row of display
+        self.progress_units = int(self.display_width / self.list_length)
+
+    # **** End of ProgressBar.__init__()
+
+# **** End of class ProgressBar() **** #
+
 
 class City():
 
@@ -21,9 +50,19 @@ class City():
 
         #######################################################################################################################
         #
-        # Weather attributes
+        # local timezone, date, time and weekday name attributes
         #
         #######################################################################################################################
+        self.local_timezone     = ''    # local_timezone     format 'Europe/Vienna'
+        self.local_tz_dt_txt    = ''    # local_tz_dt_txt    format '2018-07-09 16:58:00' YYYY-MM-DD HH:MM:SS
+        self.local_weekday_name = ''    # local_weekday_name format 'Sunday'
+
+        #######################################################################################################################
+        #
+        # current Weather attributes
+        #
+        #######################################################################################################################
+        self.owm_weather_report_run = False   # if False weather report not run. If True weather report has been run.
         self.owm_weather_data  = {}           # json data from OpenWeatherMap api response
         self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
                                               # requests.get within 10 minutes intervals.
@@ -90,6 +129,76 @@ class City():
     # **** End of City.__init__() **** #
 
 
+    def update_local_timezone(self):
+
+        # set_city_tz_date_time() uses package TimezoneFinder
+        # https://github.com/MrMinimal64/timezonefinder
+        #
+        # timezone_at()
+        #   This is the default function to check which timezone a point lies within 
+        #      - (similar to tzwheres tzNameAt()).
+        #      - If no timezone has been found, None is being returned.
+        #   PLEASE NOTE: This approach is optimized for speed and the common case to only query 
+        #   points within a timezone. The last possible timezone in proximity is always returned 
+        #   (without checking if the point is really included).
+        #
+        #   So results might be misleading for points outside of any timezone.
+        #
+        #   Example:
+        #   longitude = 13.358
+        #   latitude = 52.5061
+        #   tf.timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Berlin'
+        #
+        # certain_timezone_at()
+        #   NOTE: The timezone polygons do NOT follow the shorelines any more! This causes the 
+        #   computed distance from a timezone polygon to be not really meaningful/accurate.
+        #
+        #   Only use this when the point is not inside a polygon (simply computes and compares the 
+        #   distances to the polygon boundaries!). This returns the closest timezone of all polygons 
+        #   within +-1 degree lng and +-1 degree lat (or None).
+        #
+        #   Example:
+        #   longitude = 12.773955
+        #   latitude = 55.578595
+        #   tf.closest_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Copenhagen'
+
+        tf = TimezoneFinder()
+
+        # self.local_timezone will be of string format 'Europe/London'
+        self.local_timezone = tf.closest_timezone_at(lng=self.geocode_lng, lat=self.geocode_lat)
+    
+    # **** End of method City.update_local_timezone() **** #
+
+
+    def update_local_tz_dt_txt(self):
+
+        # self.local_tz_dt_txt will be of string format '2018-07-10 04:02:10' YYYY-MM-DD HH:MM:SS
+        tz = pytz.timezone(self.local_timezone)
+
+        # tz_now will be assigned datetime instance method datetime
+        # tz_now = datetime.datetime(2018, 7, 10, 4, 2, 10, 134266, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+        tz_now = datetime.now(tz)
+
+        # convert tz_now to a string and slice the date and time only
+        # self.local_tz_dt_txt str format will be '2018-07-10 04:02:10'
+        # this is done to be consistent with the owm forecast json 'dt_txt'
+        self.local_tz_dt_txt = str(tz_now)[:19]
+
+    # **** End of City.update_local_tz_dt_txt() **** #
+
+
+    def update_local_weekday_name(self):
+
+        # self.local_weekday_name will be of string format 'Tuesday'
+        #
+        # it is done this way to be consistent with the owm forecast json 'dt_txt
+
+        date_time_string = datetime.strptime(self.local_tz_dt_txt, "%Y-%m-%d %H:%M:%S")
+        self.local_weekday_name = calendar.day_name[date_time_string.weekday()]
+
+    # **** End of City.update_local_weekday_name() **** #
+
+
     def update_owm_temp(self):
 
         # 'temp' key is not always avaialable in the owm_weather_data dictionary
@@ -123,12 +232,43 @@ class City():
     # **** End of City.update_owm_visibility() **** #
 
 
+    def update_owm_weather_code(self):
+
+        try:
+            # get the weather code
+            #
+            # key 'id' will be used as a key for a lookup in the owm_weather_priority_codes dictionary
+            # - the key will provide an index for the owm_weather_priority_codes dictionary keys and values
+            # - owm_weather_priority_codes is global as it was imported in
+            # - from weather_codes_with_priority import *
+            self.owm_weather_code = self.owm_weather_data['weather'][0]['id']
+
+        except:
+            # self.owm_weather_data['weather'][0]['id'] lookup failed
+            self.owm_weather_code = 'Not Available'
+
+    # **** End of City.update_owm_weather_code() **** #
+
+
     def update_owm_description(self):
 
-        # 'description' key is not always present in the owm_weather_data dictionary
+
+        # 'weather' key is not always present in the owm_weather_data dictionary
+
         try:
-            self.owm_description = self.owm_weather_data['weather'][0]['description']
+            # get the weather code id and convert to string
+            #
+            # str(id) will be used as a key for a lookup in the owm_weather_priority_codes dictionary
+            # - the key will provide an index for the 'descr' key and value
+            #
+            # owm_weather_priority_codes is global as it was imported in
+            # from weather_codes_with_priority import *
+            code = str(self.owm_weather_code)
+
+            self.owm_description = owm_weather_priority_codes['codes'][code]['descr']
+
         except:
+            # self.owm_weather_data['weather'][0]['id'] lookup failed
             self.owm_description = 'Not Available'
 
     # **** End of City.update_owm_description() **** #
@@ -176,59 +316,6 @@ class City():
     # **** End of City.perform_owm_forecast_api_query() **** #
 
 
-    def forecast_first_weekday_name(self):
-        
-        # find weekday_name
-        # dt_txt will be a date and time string "2018-07-07 03:00:00"
-        # date will be the datetime date
-        # weekday_name will be the result of calendar.day_name[date.weekday()]
-        dt_txt = self.owm_forecast_data['list'][0]['dt_txt']
-        date = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S")
-        weekday_name = calendar.day_name[date.weekday()]
-
-        # only 1 of the weekday names should be assigned True else: they are all False
-        #
-        # if all weekday names are False the current weekday name will be the first weekday name
-        #   - current weekday name will be assigned True in the else: statement
-        if self.sunday == True:
-            pass
-        elif self.monday == True:
-            pass
-        elif self.tuesday == True:
-            pass
-        elif self.wednesday == True:
-            pass
-        elif self.thursday == True:
-            pass
-        elif self.friday == True:
-            pass
-        elif self.saturday == True:
-            pass
-        else:
-            if weekday_name == 'Sunday':
-                self.sunday = True
-
-            elif weekday_name == 'Monday':
-                self.monday = True
-
-            elif weekday_name == 'Tuesday':
-                self.tuesday = True
-
-            elif weekday_name == 'Wednesday':
-                self.wednesday = True
-
-            elif weekday_name == 'Thursday':
-                self.thursday = True
-
-            elif weekday_name == 'Friday':
-                self.friday = True
-
-            elif weekday_name == 'Saturday':
-                self.saturday = True
-
-    # **** End of City.forecast_first_weekday_name() **** #
-
-
     def find_temp_max(self):
 
         # determine the max temperature from the forecast query for each day of the week
@@ -237,13 +324,15 @@ class City():
         forecast_list = self.owm_forecast_data['list']
 
         for i in range(len(forecast_list)):
+
+            # dt_txt format will be "2018-07-09 15:00:00"
             dt_txt = self.owm_forecast_data['list'][i]['dt_txt']
             date = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S")
             weekday_name = calendar.day_name[date.weekday()]
 
             high_temp = self.owm_forecast_data['list'][i]['main']['temp_max']
 
-            # if day of week matches and high_temp is greater than day of week high_temp then update
+            # if day of week matches and high_temp is greater than <day of week>_high_temp then update
             # with high_temp
 
             if weekday_name == 'Sunday':
@@ -284,9 +373,102 @@ class City():
     # **** End of City.find_temp_max() **** #
 
 
-    def find_highest_weather_code(self):
+    def update_first_weather_code(self):
 
-        # update the attributes with the highest weather code
+        # first weather code is the weather code assigned to self.owm_weather_code
+        # self.<weekday name>_weather_code = self.owm_weather_code
+        #
+        # match on the self.local_weekday_name to find the correct self.<weekday name>_weather_code
+        # to update
+        if self.local_weekday_name == 'Sunday':
+            self.sunday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Monday':
+            self.monday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Tuesday':
+            self.tuesday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Wednesday':
+            self.wednesday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Thursday':
+            self.thursday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Friday':
+            self.friday_weather_code = self.owm_weather_code
+
+        elif self.local_weekday_name == 'Saturday':
+            self.saturday_weather_code = self.owm_weather_code
+
+    # **** End of City.update_first_weather_code() **** #
+
+
+    def update_first_high_temp(self):
+
+        # first weather high temp is the weather temp assigned to self.owm_temp
+        # self.<weekday name>_high_temp = self.owm_temp
+        #
+        # match on the self.local_weekday_name to find the correct self.<weekday name>_high_temp
+        # to update
+        if self.local_weekday_name == 'Sunday':
+            self.sunday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Monday':
+            self.monday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Tuesday':
+            self.tuesday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Wednesday':
+            self.wednesday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Thursday':
+            self.thursday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Friday':
+            self.friday_high_temp = self.owm_temp
+
+        elif self.local_weekday_name == 'Saturday':
+            self.saturday_high_temp = self.owm_temp
+
+    # **** End of City.update_first_high_temp() **** #
+
+
+    def update_first_description(self):
+
+        # first weather description is the weather description assigned to self.owm_description
+        # self.<weekday name>_weather_description = self.owm_description
+        #
+        # match on the self.local_weekday_name to find the correct self.<weekday name>_weather_description
+        # to update
+        if self.local_weekday_name == 'Sunday':
+            self.sunday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Monday':
+            self.monday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Tuesday':
+            self.tuesday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Wednesday':
+            self.wednesday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Thursday':
+            self.thursday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Friday':
+            self.friday_weather_description = self.owm_description
+
+        elif self.local_weekday_name == 'Saturday':
+            self.saturday_weather_description = self.owm_description
+
+    # **** End of City.update_update_first_description() **** #
+
+
+    def find_highest_priority_weather_code(self):
+
+        # update the attributes with the highest priority weather code
 
         forecast_list = self.owm_forecast_data['list']
 
@@ -296,136 +478,107 @@ class City():
             weekday_name = calendar.day_name[date.weekday()]
 
             weather_code = self.owm_forecast_data['list'][i]['weather'][0]['id']
+            priority = owm_weather_priority_codes['codes'][str(weather_code)]['priority']
 
-            # if day of week matches and weather_code is greater than day of week weather_code then update
-            # with weather_code
+            # if day of week matches and weather code priority is less than (higher priority) day of 
+            # week weather_code then update with weather_code
 
             if weekday_name == 'Sunday':
-                if weather_code > self.sunday_weather_code:
+                if self.sunday_weather_code == 0:
                     self.sunday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.sunday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.sunday_weather_code = weather_code
 
             elif weekday_name == 'Monday':
-                if weather_code > self.monday_weather_code:
+                if self.monday_weather_code == 0:
                     self.monday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.monday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.monday_weather_code = weather_code
 
             elif weekday_name == 'Tuesday':
-                if weather_code > self.tuesday_weather_code:
+                if self.tuesday_weather_code == 0:
                     self.tuesday_weather_code = weather_code
 
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.tuesday_weather_code)]['priority']
+
+                    if priority > weekday_priority:
+                        self.tuesday_weather_code = weather_code
+
             elif weekday_name == 'Wednesday':
-                if weather_code > self.wednesday_weather_code:
+                if self.wednesday_weather_code == 0:
                     self.wednesday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.wednesday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.wednesday_weather_code = weather_code
 
             elif weekday_name == 'Thursday':
-                if weather_code > self.thursday_weather_code:
+                if self.thursday_weather_code == 0:
                     self.thursday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.thursday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.thursday_weather_code = weather_code
 
             elif weekday_name == 'Friday':
-                if weather_code > self.friday_weather_code:
+                if self.friday_weather_code == 0:
                     self.friday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.friday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.friday_weather_code = weather_code
 
             elif weekday_name == 'Saturday':
-                if weather_code > self.saturday_weather_code:
+                if self.saturday_weather_code == 0:
                     self.saturday_weather_code = weather_code
+                else:
+                    weekday_priority = owm_weather_priority_codes['codes'][str(self.saturday_weather_code)]['priority']
+                    if priority > weekday_priority:
+                        self.saturday_weather_code = weather_code
 
-    # **** End of City.find_highest_weather_code() **** #
+    # **** End of City.find_highest_priority_weather_code() **** #
 
 
     def set_weather_description(self):
 
-        # owm_codes dictionary consists of weather codes and description for each code
-        # owm_codes dictionary will be used as a lookup for the 'description' value
-        owm_codes = {'codes':{
-        '200':{'code': 200, 'description': 'thunderstorm with light rain',   'icon': '11d'},
-        '201':{'code': 201, 'description': 'thunderstorm with rain',         'icon': '11d'},
-        '202':{'code': 202, 'description': 'thunderstorm with heavy rain',   'icon': '11d'},
-        '210':{'code': 210, 'description': 'light thunderstorm',             'icon': '11d'},
-        '211':{'code': 211, 'description': 'thunderstorm',                   'icon': '11d'},
-        '212':{'code': 212, 'description': 'heavy thunderstorm',             'icon': '11d'},
-        '221':{'code': 221, 'description': 'ragged thunderstorm',            'icon': '11d'},
-        '230':{'code': 230, 'description': 'thunderstorm with light drizzle','icon': '11d'},
-        '231':{'code': 231, 'description': 'thunderstorm with drizzle',      'icon': '11d'},
-        '232':{'code': 232, 'description': 'thunderstorm with heavy drizzle','icon': '11d'},
-
-        '300':{'code': 300, 'description': 'light intensity drizzle',        'icon': '09d'},
-        '301':{'code': 301, 'description': 'drizzle',                        'icon': '09d'},
-        '302':{'code': 302, 'description': 'heavy intensity drizzle',        'icon': '09d'},
-        '310':{'code': 310, 'description': 'light intensity drizzle rain',   'icon': '09d'},
-        '311':{'code': 311, 'description': 'drizzle rain',                   'icon': '09d'},
-        '312':{'code': 312, 'description': 'heavy intensity drizzle rain',   'icon': '09d'},
-        '313':{'code': 313, 'description': 'shower rain and drizzle',        'icon': '09d'},
-        '314':{'code': 314, 'description': 'heavy shower rain and drizzle',  'icon': '09d'},
-        '321':{'code': 321, 'description': 'shower drizzle',                 'icon': '09d'},
-
-        '500':{'code': 500, 'description': 'light rain',                     'icon': '10d'},
-        '501':{'code': 501, 'description': 'moderate rain',                  'icon': '10d'},
-        '502':{'code': 502, 'description': 'heavy intensity rain',           'icon': '10d'},
-        '503':{'code': 503, 'description': 'very heavy rain',                'icon': '10d'},
-        '504':{'code': 504, 'description': 'extreme rain',                   'icon': '10d'},
-        '511':{'code': 511, 'description': 'freezing rain',                  'icon': '10d'},
-        '520':{'code': 520, 'description': 'light intensity shower rain',    'icon': '10d'},
-        '521':{'code': 521, 'description': 'shower rain',                    'icon': '10d'},
-        '522':{'code': 522, 'description': 'heavy intensity shower rain',    'icon': '10d'},
-        '531':{'code': 531, 'description': 'ragged shower rain',             'icon': '10d'},
-
-        '600':{'code': 600, 'description': 'light snow',                     'icon': '13d'},
-        '601':{'code': 601, 'description': 'snow',                           'icon': '13d'},
-        '602':{'code': 602, 'description': 'heavy snow',                     'icon': '13d'},
-        '611':{'code': 611, 'description': 'sleet',                          'icon': '13d'},
-        '612':{'code': 612, 'description': 'shower sleet',                   'icon': '13d'},
-        '615':{'code': 615, 'description': 'light rain and snow',            'icon': '13d'},
-        '616':{'code': 616, 'description': 'rain and snow',                  'icon': '13d'},
-        '620':{'code': 620, 'description': 'light shower snow',              'icon': '13d'},
-        '621':{'code': 621, 'description': 'shower snow',                    'icon': '13d'},
-        '622':{'code': 622, 'description': 'heavy shower snow',              'icon': '13d'},
-
-        '701':{'code': 701, 'description': 'mist',                           'icon': '50d'},
-        '711':{'code': 711, 'description': 'smoke',                          'icon': '50d'},
-        '721':{'code': 721, 'description': 'haze',                           'icon': '50d'},
-        '731':{'code': 731, 'description': 'sand, dust whirls',              'icon': '50d'},
-        '741':{'code': 741, 'description': 'fog',                            'icon': '50d'},
-        '751':{'code': 751, 'description': 'sand',                           'icon': '50d'},
-        '761':{'code': 761, 'description': 'dust',                           'icon': '50d'},
-        '762':{'code': 762, 'description': 'volcanic ash',                   'icon': '50d'},
-        '771':{'code': 771, 'description': 'squalls',                        'icon': '50d'},
-        '781':{'code': 781, 'description': 'tornado',                        'icon': '50d'},
-
-        '800':{'code': 800, 'description': 'clear sky',                      'icon': '01d'},
-        '801':{'code': 801, 'description': 'few clouds',                     'icon': '02d'},
-        '802':{'code': 802, 'description': 'scattered clouds',               'icon': '03d'},
-        '803':{'code': 803, 'description': 'broken clouds',                  'icon': '04d'},
-        '804':{'code': 804, 'description': 'overcast clouds',                'icon': '04d'}
-        } }
-
-        # get the desription from the owm_codes dictionary and update the self.<weekday_name>_weather_description
+        # get the desription from the owm_weather_priority_codes dictionary and update the 
+        # self.<weekday_name>_weather_description
+        #
+        # owm_weather_priority_codes dictionary is global
+        # from weather_codes_with_priority import *
 
         if self.sunday_weather_code != 0:
             weather_code = str(self.sunday_weather_code)
-            self.sunday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.sunday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.monday_weather_code != 0:
             weather_code = str(self.monday_weather_code)
-            self.monday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.monday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.tuesday_weather_code != 0:
             weather_code = str(self.tuesday_weather_code)
-            self.tuesday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.tuesday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.wednesday_weather_code != 0:
             weather_code = str(self.wednesday_weather_code)
-            self.wednesday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.wednesday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.thursday_weather_code != 0:
             weather_code = str(self.thursday_weather_code)
-            self.thursday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.thursday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.friday_weather_code != 0:
             weather_code = str(self.friday_weather_code)
-            self.friday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.friday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
         if self.saturday_weather_code != 0:
             weather_code = str(self.saturday_weather_code)
-            self.saturday_weather_description = owm_codes['codes'][weather_code]['description']
+            self.saturday_weather_description = owm_weather_priority_codes['codes'][weather_code]['descr']
 
     # **** End of City.set_weather_description() **** #
 
@@ -435,31 +588,31 @@ class City():
         # returns a list of the first day plus the 2 days after
         # used during the 'forecast' query
 
-        if self.sunday == True:
+        if self.local_weekday_name == 'Sunday':
             three_day_list = ['Sunday', 'Monday', 'Tuesday']
             return three_day_list
 
-        elif self.monday == True:
+        elif self.local_weekday_name == 'Monday':
             three_day_list = ['Monday', 'Tuesday', 'Wednesday']
             return three_day_list
 
-        elif self.tuesday == True:
+        elif self.local_weekday_name == 'Tuesday':
             three_day_list = ['Tuesday', 'Wednesday', 'Thursday']
             return three_day_list
 
-        elif self.wednesday == True:
+        elif self.local_weekday_name == 'Wednesday':
             three_day_list = ['Wednesday', 'Thursday', 'Friday']
             return three_day_list
 
-        elif self.thursday == True:
+        elif self.local_weekday_name == 'Thursday':
             three_day_list = ['Thursday', 'Friday', 'Saturday']
             return three_day_list
 
-        elif self.friday == True:
+        elif self.local_weekday_name == 'Friday':
             three_day_list = ['Friday', 'Saturday', 'Sunday']
             return three_day_list
 
-        elif self.saturday == True:
+        elif self.local_weekday_name == 'Saturday':
             three_day_list = ['Saturday', 'Sunday', 'Monday']
             return three_day_list
 
