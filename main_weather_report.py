@@ -59,7 +59,7 @@ get_city_coordinates(city_object_list)
 loop_count = 1
 
 # while loop determines number of times to run the reports
-while loop_count != 1000:
+while loop_count <= 1000:
 
     # __main__() START
 
@@ -71,3 +71,7 @@ while loop_count != 1000:
     # __main__() FINISHED
 
     loop_count += 1
+
+clear_screen()
+time.sleep(.5)
+thank_you_banner()

@@ -116,6 +116,35 @@ def forecast_report_banner():
 # **** End of forecast_report_banner() **** #
 
 
+def thank_you_banner():
+
+    # number of characters in each line. some characters can be a blank space.
+    line_len = 118
+
+    # assign string to display in display_banner()
+    first_string  = "####################################################"
+    second_string = "#                                                  #"
+    third_string  = "#      Thank You for using The Weather Report      #"
+    fourth_string = "#                                                  #"
+    fifth_string  = "####################################################"
+
+    first_string  = pad_banner_string(first_string, line_len)
+    second_string = pad_banner_string(second_string, line_len)
+    third_string  = pad_banner_string(third_string, line_len)
+    fourth_string = pad_banner_string(fourth_string, line_len)
+    fifth_string  = pad_banner_string(fifth_string, line_len)
+
+    print(first_string)
+    print(second_string)
+    print(third_string)
+    print(fourth_string)
+    print(fifth_string)
+    print('\n')
+    print('\n')
+
+# **** End of thank_you_banner() **** #
+
+
 def pad_banner_string(string, line_len):
 
     # create spaces for front and back of first_string for display
@@ -740,6 +769,23 @@ def display_weather_report(city_object_list):
     print(" {}{}{}{}{}".format(city, weather, temp, wind, visibility))
     print(dashed_line_string)
 
+    # blank is for createing blank row
+    # the blanks still need to follow the first,second,mid,last length sizes
+    blank = ' '
+    blank_first     = pad_with_spaces_for_weather_report(blank, first, 'blank')
+    blank_second    = pad_with_spaces_for_weather_report(blank, second, 'blank')
+    blank_mid       = pad_with_spaces_for_weather_report(blank, mid, 'blank')
+    blank_last      = pad_with_spaces_for_weather_report(blank, last, 'blank_last')
+
+    # create a black background for blanks
+    blank_first     = (Back.BLACK + blank_first     + Style.RESET_ALL)
+    blank_second    = (Back.BLACK + blank_second    + Style.RESET_ALL)
+    blank_mid       = (Back.BLACK + blank_mid       + Style.RESET_ALL)
+    blank_last      = (Back.BLACK + blank_last      + Style.RESET_ALL)
+
+    # print the blank row
+    print(" {}{}{}{}{}".format(blank_first, blank_second, blank_mid, blank_mid, blank_last))
+
     color_count = 0
 
     # loop through each item in city_object_list 
@@ -809,6 +855,10 @@ def display_weather_report(city_object_list):
 
         print(" {}{}{}{}{}".format(city_string, weather_descr, city_temp, city_wind, city_visibility))
 
+    # print the blank row - all cities have been displayed
+    print(" {}{}{}{}{}".format(blank_first, blank_second, blank_mid, blank_mid, blank_last))
+
+    # print the dashed_line_string
     print(dashed_line_string)
 
 # **** End of function display_weather_report() **** #
@@ -817,7 +867,7 @@ def display_weather_report(city_object_list):
 def pad_with_spaces_for_weather_report(var, length, position):
 
     # convert var to string.
-    var = str(var)
+    var = ' ' + str(var)
     length = length - len(var)
 
 
@@ -825,16 +875,24 @@ def pad_with_spaces_for_weather_report(var, length, position):
         for i in range(length + 1):
             var = var + ' '
 
+    elif position == 'blank':
+        for i in range(length + 1):
+            var = var + ' '
+
+    elif position == 'blank_last':
+        for i in range(length):
+            var = var + ' '
+
     elif position == 'first' or position == 'second' or position == 'mid':
         for i in range(length + 1):
-            if i == 0 or i == length:
+            if i == 0 or i == length or i == length - 1:
                 var = var + ' '
             else:
                 var = var + '.'
 
     elif position == 'last':
         for i in range(length):
-            if i == 0:
+            if i == 0 or i == length - 1:
                 var = var + ' '
             else:
                 var = var + '.'
@@ -1258,7 +1316,10 @@ def ctrl_c_to_quit(loop_range):
             print("\r                     ", end='', flush=True)
             time.sleep(.5)
         except KeyboardInterrupt:
+            clear_screen()
+            time.sleep(.5)
             print('\n')
+            thank_you_banner()
             sys.exit(0) # exit
 
 # **** End of ctrl_c_to_quit() **** #

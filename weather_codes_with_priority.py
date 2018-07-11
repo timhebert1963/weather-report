@@ -66,9 +66,9 @@ owm_weather_priority_codes = {'codes':{
     '771':{'code': 771, 'priority': 2,  'descr': 'squalls',        'owm_description': 'squalls'},
     '781':{'code': 781, 'priority': 1,  'descr': 'tornado',        'owm_description': 'tornado'},
 
-    '800':{'code': 800, 'priority': 24, 'descr': 'clear sky',        'owm_description': 'clear sky'},
-    '801':{'code': 801, 'priority': 22, 'descr': 'few clouds',       'owm_description': 'few clouds'},
-    '802':{'code': 802, 'priority': 23, 'descr': 'scattered clouds', 'owm_description': 'scattered clouds'},
-    '803':{'code': 803, 'priority': 22, 'descr': 'few clouds',       'owm_description': 'broken clouds'},
-    '804':{'code': 804, 'priority': 21, 'descr': 'overcast clouds',  'owm_description': 'overcast clouds'}
+    '800':{'code': 800, 'priority': 24, 'descr': 'clear sky',       'owm_description': 'clear sky'},
+    '801':{'code': 801, 'priority': 23, 'descr': 'few clouds',      'owm_description': 'few clouds'},
+    '802':{'code': 802, 'priority': 22, 'descr': 'clouds',          'owm_description': 'scattered clouds'},
+    '803':{'code': 803, 'priority': 22, 'descr': 'clouds',          'owm_description': 'broken clouds'},
+    '804':{'code': 804, 'priority': 21, 'descr': 'overcast clouds', 'owm_description': 'overcast clouds'}
     } }
