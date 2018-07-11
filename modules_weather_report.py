@@ -469,6 +469,7 @@ class City():
     def find_highest_priority_weather_code(self):
 
         # update the attributes with the highest priority weather code
+        # the highest priority is the lowest integer.
 
         forecast_list = self.owm_forecast_data['list']
 
@@ -477,95 +478,106 @@ class City():
             date = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S")
             weekday_name = calendar.day_name[date.weekday()]
 
-            weather_code = self.owm_forecast_data['list'][i]['weather'][0]['id']
-            priority = owm_weather_priority_codes['codes'][str(weather_code)]['priority']
+            # f_weather_code is the forecast weather code
+            # f_priority is the priority of f_weather_code
+            #    - f_priority will be looked up and retrieved from the owm_weather_priority_codes dictionary
+            f_weather_code = self.owm_forecast_data['list'][i]['weather'][0]['id']
+            f_priority = owm_weather_priority_codes['codes'][str(weather_code)]['priority']
 
-            # if day of week matches and weather code priority is less than (higher priority) day of 
-            # week weather_code then update with weather_code
+            # if <weekday name>_weather_code = 0:
+            #    this means a valid weather code has not been assigned
+            #    assign <weekday name>_weather_code to f_weather_code
+            #
+            # else: <if <weekday name>_weather_code != 0>
+            #    get the current priority of <weekday name>_weather_code
+            #
+            #    if f_priority < current_priority:
+            #        this means the f_priority is the highest priority
+            #        assign <weekday name>_weather_code to f_weather_code
 
             # Sunday
             if weekday_name == 'Sunday':
 
                 if self.sunday_weather_code == 0:
-                    self.sunday_weather_code = weather_code
+                    self.sunday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.sunday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.sunday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.sunday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.sunday_weather_code = f_weather_code
 
             # Monday
             elif weekday_name == 'Monday':
 
                 if self.monday_weather_code == 0:
-                    self.monday_weather_code = weather_code
+                    self.monday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.monday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.monday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.monday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.monday_weather_code = f_weather_code
 
             # Tuesday
             elif weekday_name == 'Tuesday':
 
                 if self.tuesday_weather_code == 0:
-                    self.tuesday_weather_code = weather_code
+                    self.tuesday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.tuesday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.tuesday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.tuesday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.tuesday_weather_code = f_weather_code
 
             # Wednesday
             elif weekday_name == 'Wednesday':
 
                 if self.wednesday_weather_code == 0:
-                    self.wednesday_weather_code = weather_code
+                    self.wednesday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.wednesday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.wednesday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.wednesday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.wednesday_weather_code = f_weather_code
 
             # Thursday
             elif weekday_name == 'Thursday':
 
                 if self.thursday_weather_code == 0:
-                    self.thursday_weather_code = weather_code
+                    self.thursday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.thursday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.thursday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.thursday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.thursday_weather_code = f_weather_code
 
             # Friday
             elif weekday_name == 'Friday':
 
                 if self.friday_weather_code == 0:
-                    self.friday_weather_code = weather_code
+                    self.friday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.friday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.friday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.friday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.friday_weather_code = f_weather_code
 
             # Saturday
             elif weekday_name == 'Saturday':
 
                 if self.saturday_weather_code == 0:
-                    self.saturday_weather_code = weather_code
+                    self.saturday_weather_code = f_weather_code
 
                 else:
-                    weekday_priority = owm_weather_priority_codes['codes'][str(self.saturday_weather_code)]['priority']
+                    current_priority = owm_weather_priority_codes['codes'][str(self.saturday_weather_code)]['priority']
 
-                    if priority < weekday_priority:
-                        self.saturday_weather_code = weather_code
+                    if f_priority < current_priority:
+                        self.saturday_weather_code = f_weather_code
 
     # **** End of City.find_highest_priority_weather_code() **** #
 
