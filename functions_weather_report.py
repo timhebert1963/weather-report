@@ -15,10 +15,14 @@ import googlemaps
 # **** End of imports **** #
 
 
-def welcome_banner():
+# Global variable
+# display_width sets the banner widths during display functions
+#
+# NOTE: display_weather_report() and display_forecast_report() functions will need 
+#       re-work if display_width value changes. The functions assume display_width = 118
+display_width = 118
 
-    # number of characters in each line. some characters can be a blank space.
-    line_len = 118
+def welcome_banner():
 
     # assign string to display in display_banner()
     first_string  = "Welcome to the Weather and Forecast Report"
@@ -26,10 +30,10 @@ def welcome_banner():
     third_string  = "Forecast Report: Three day Forecast of Temperatures and Weather Conditions"
     fourth_string = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
 
-    first_string  = pad_banner_string(first_string, line_len)
-    second_string = pad_banner_string(second_string, line_len)
-    third_string  = pad_banner_string(third_string, line_len)
-    fourth_string = pad_banner_string(fourth_string, line_len)
+    first_string  = pad_banner_string(first_string)
+    second_string = pad_banner_string(second_string)
+    third_string  = pad_banner_string(third_string)
+    fourth_string = pad_banner_string(fourth_string)
 
     print(first_string)
     print('\n')
@@ -41,22 +45,19 @@ def welcome_banner():
     print('\n')
     print('\n')
 
-# **** End of welcome_to_stock_quotes_banner() **** #
+# **** End of welcome_banner() **** #
 
 
 def weather_report_banner():
-
-    # number of characters in each line. some characters can be a blank space.
-    line_len = 118
 
     # assign string to display in display_banner()
     first_string  = "The Weather Report"
     second_string = "Current Weather, Temperature, Wind and Visibility"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
 
-    first_string  = pad_banner_string(first_string, line_len)
-    second_string = pad_banner_string(second_string, line_len)
-    third_string  = pad_banner_string(third_string, line_len)
+    first_string  = pad_banner_string(first_string)
+    second_string = pad_banner_string(second_string)
+    third_string  = pad_banner_string(third_string)
 
     print(first_string)
     print('\n')
@@ -70,17 +71,14 @@ def weather_report_banner():
 
 def gather_current_weather_data_banner():
 
-    # number of characters in each line. some characters can be a blank space.
-    line_len = 118
-
     # assign string to display in display_banner()
     first_string  = "Collecting Current Weather Data"
     second_string = "Preparing for Forecast Report"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/weather? used for queries"
 
-    first_string  = pad_banner_string(first_string, line_len)
-    second_string = pad_banner_string(second_string, line_len)
-    third_string  = pad_banner_string(third_string, line_len)
+    first_string  = pad_banner_string(first_string)
+    second_string = pad_banner_string(second_string)
+    third_string  = pad_banner_string(third_string)
 
     print(first_string)
     print('\n')
@@ -94,17 +92,14 @@ def gather_current_weather_data_banner():
 
 def forecast_report_banner():
 
-    # number of characters in each line. some characters can be a blank space.
-    line_len = 118
-
     # assign string to display in display_banner()
     first_string  = "The Forecast Report"
     second_string = "Three day Forecast of Temperatures and Weather Conditions"
     third_string  = "OpenWeatherMap url: http://api.openweathermap.org/data/2.5/forecast? used for queries"
 
-    first_string  = pad_banner_string(first_string, line_len)
-    second_string = pad_banner_string(second_string, line_len)
-    third_string  = pad_banner_string(third_string, line_len)
+    first_string  = pad_banner_string(first_string)
+    second_string = pad_banner_string(second_string)
+    third_string  = pad_banner_string(third_string)
 
     print(first_string)
     print('\n')
@@ -118,9 +113,6 @@ def forecast_report_banner():
 
 def thank_you_banner():
 
-    # number of characters in each line. some characters can be a blank space.
-    line_len = 118
-
     # assign string to display in display_banner()
     first_string  = "####################################################"
     second_string = "#                                                  #"
@@ -128,11 +120,11 @@ def thank_you_banner():
     fourth_string = "#                                                  #"
     fifth_string  = "####################################################"
 
-    first_string  = pad_banner_string(first_string, line_len)
-    second_string = pad_banner_string(second_string, line_len)
-    third_string  = pad_banner_string(third_string, line_len)
-    fourth_string = pad_banner_string(fourth_string, line_len)
-    fifth_string  = pad_banner_string(fifth_string, line_len)
+    first_string  = pad_banner_string(first_string)
+    second_string = pad_banner_string(second_string)
+    third_string  = pad_banner_string(third_string)
+    fourth_string = pad_banner_string(fourth_string)
+    fifth_string  = pad_banner_string(fifth_string)
 
     print(first_string)
     print(second_string)
@@ -145,11 +137,15 @@ def thank_you_banner():
 # **** End of thank_you_banner() **** #
 
 
-def pad_banner_string(string, line_len):
+def pad_banner_string(string):
+
+    ######################################
+    # variable display_width is global
+    ######################################
 
     # create spaces for front and back of first_string for display
-    string_front = int((line_len - len(string)) / 2)
-    string_back  = line_len - (string_front + len(string))
+    string_front = int((display_width - len(string)) / 2)
+    string_back  = display_width - (string_front + len(string))
 
     front = ''
     back  = ''
@@ -749,6 +745,8 @@ def display_weather_report(city_object_list):
 
     # **** End of function create_dashed_line() **** #
 
+    # If global variable display_width changes values the variables first, second, mid, last will have to
+    # change or this will have to re-worked. The values assigned assume display_width = 118
     first   = 25      # city, state or country
     second  = 30      # weather description
     mid     = 17      # temperature, wind, visibility
@@ -1050,6 +1048,8 @@ def display_forecast_report(city_object_list):
 
     # **** End of function pad_day_number_title() **** #
 
+    # If global variable display_width changes values the variables first, second, mid, last will have to
+    # change or this will have to re-worked. The values assigned assume display_width = 118
     section      = 39      # length of each display section
     section_num  = 3       # number of display sections
 
@@ -1278,7 +1278,10 @@ def get_weather_descriptions(three_days, city):
 
 
 def progress_bar_scale():
-    
+
+    # If the global variable display_width changes values this function will have to be re-worked.
+    # the positions assume display_width = 118
+
     # create a progress bar scale for the progress bar display output
     blank = ' '
     print("{:>22}{}{:>24}{:>23}{:>23}{:>26}".format(blank, '0', '25%', '50%', '75%', '100%'))
@@ -1297,7 +1300,7 @@ def display_progress_bar_query_type(query_type):
 
     elif query_type == 'city_id':
         blank_line = '\r'
-        for i in range(119):
+        for i in range(display_width + 1):
             blank_line = blank_line + ' '
         print(blank_line, end='', flush=True)
         print("\r City ID Queries     ", end="", flush=True)
@@ -1307,6 +1310,8 @@ def display_progress_bar_query_type(query_type):
 
     elif query_type == 'forecast':
         print(" Forecast Queries    ", end="")
+
+# **** End of display_progress_bar_query_type() **** #
 
 
 def display_progress_bar(pb):
