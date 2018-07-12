@@ -165,6 +165,11 @@ def pad_banner_string(string):
 
 def get_open_weather_map_api_key():
 
+    # in order to perform queries to the OpenWeatherMap api an api key needs to be
+    # provided along with the query.
+    #
+    # get_open_weather_map_api_key() will return the api key
+
     # open file owm_apikey_path
     # readline 2 (which is actually line 3)
     # return key
@@ -226,6 +231,9 @@ def get_city_names_for_weather_report(city_names_list):
                 print(" You did not enter 'y' or 'n'. Please Try Again.")
 
     # **** End of function enter_more_city_names() **** #
+
+    # user will be asked to provide city names, country or state for the tracking of weather
+    # and forecast reports.
 
     enter_city_names = True
 
@@ -390,7 +398,7 @@ def create_city_object_list(city_names_list):
 
 def get_geocode_degrees(city_object_list, pb):
 
-    # get the geocode latitude and longitude for each city
+    # get the geocode latitude and longitude for each city in city_object_list
     
     # api_key for googlemaps geocode api
     geocode_api_key = os.environ['APIKEY']

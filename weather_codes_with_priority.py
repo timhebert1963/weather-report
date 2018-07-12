@@ -24,7 +24,7 @@ owm_weather_priority_codes = {'codes':{
     '232':{'code': 232, 'priority': 12, 'descr': 'thunderstorm / rain','owm_description': 'thunderstorm with heavy drizzle'},
 
     '300':{'code': 300, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'light intensity drizzle'},
-    '301':{'code': 301, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'drizzle', 'owm_description': 'drizzle'},
+    '301':{'code': 301, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'drizzle'},
     '302':{'code': 302, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'heavy intensity drizzle'},
     '310':{'code': 310, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'light intensity drizzle rain'},
     '311':{'code': 311, 'priority': 17, 'descr': 'drizzle', 'owm_description': 'drizzle rain'},
