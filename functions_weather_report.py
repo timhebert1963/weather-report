@@ -765,7 +765,7 @@ def display_weather_report(city_object_list):
     weather    = pad_with_spaces_for_weather_report(weather, second, 'title')
     temp       = pad_with_spaces_for_weather_report(temp, mid, 'title')
     wind       = pad_with_spaces_for_weather_report(wind, mid, 'title')
-    visibility = pad_with_spaces_for_weather_report(visibility, last, 'title')
+    visibility = pad_with_spaces_for_weather_report(visibility, last, 'title_last')
 
     dashed_line_string = create_dashed_line(first, second, mid, mid_num, last)
 
@@ -894,9 +894,17 @@ def pad_with_spaces_for_weather_report(var, length, position):
     var = ' ' + str(var)
     length = length - len(var)
 
-
+    # match on the position passed in as arg
+    # loop through and add spaces or dots.
+    #
+    # some for loops will have if and else statements to pad with spaces.
+    # this is done to align with the '|' character in the display output
     if position == 'title':
         for i in range(length + 1):
+            var = var + ' '
+
+    elif position == 'title_last':
+        for i in range(length):
             var = var + ' '
 
     elif position == 'blank':
@@ -1267,7 +1275,7 @@ def get_weather_descriptions(three_days, city):
 
 def progress_bar_scale():
     
-    # create a progress bar
+    # create a progress bar scale for the progress bar display output
     blank = ' '
     print("{:>22}{}{:>24}{:>23}{:>23}{:>26}".format(blank, '0', '25%', '50%', '75%', '100%'))
 
@@ -1331,7 +1339,10 @@ def display_progress_bar(pb):
 
 def ctrl_c_to_quit(loop_range):
 
-    # Press Ctrl-C to quit will flash on the screen
+    # Press Ctrl-C to quit will flash on the screen and remain in the same position on the display
+    # output.
+    #
+    # if Ctrl-C is detected sys.exit(0) will execute -> exit the program and return to the OS prompt.
 
     for i in range(loop_range):
         try:
