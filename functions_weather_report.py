@@ -1135,18 +1135,22 @@ def display_forecast_report(city_object_list):
         # assign high_temp1,2,3 to strings
         high_temp1, high_temp2, high_temp3 = get_high_temps(three_days, city)
 
-        # high_temp1,2,3 are type float. convert to type int
-        high_temp1 = int(high_temp1)
-        high_temp2 = int(high_temp2)
-        high_temp3 = int(high_temp3)
+        # high_temp1,2,3 may be assigned 'Not Available' -> do nothing
+        # if != 'Not Available' high_temp1,2,3 are type float. 
+        #     - convert to type int
+        #     - convert to type str
+        if high_temp1 != 'Not Available' and high_temp2 != 'Not Available' and high_temp3 != 'Not Available':
+            high_temp1 = int(high_temp1)
+            high_temp2 = int(high_temp2)
+            high_temp3 = int(high_temp3)
 
-        # unicode degree symbol
-        degrees = "\u00B0"
+            # unicode degree symbol
+            degrees = "\u00B0"
 
-        # assign high_temp1,2,3 strings
-        high_temp1 = str(high_temp1) + degrees + "F"
-        high_temp2 = str(high_temp2) + degrees + "F"
-        high_temp3 = str(high_temp3) + degrees + "F"
+            # assign high_temp1,2,3 strings
+            high_temp1 = str(high_temp1) + degrees + "F"
+            high_temp2 = str(high_temp2) + degrees + "F"
+            high_temp3 = str(high_temp3) + degrees + "F"
 
         # get the weather descriptions for descr1,2,3
         descr1, descr2, descr3 = get_weather_descriptions(three_days, city)
