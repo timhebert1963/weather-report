@@ -812,13 +812,32 @@ def display_weather_report(city_object_list):
         if city.owm_temp != 'Not Available':
             # assign the city_temp string
             city_temp = int(city.owm_temp)
-            city_temp = str(city_temp) + degrees + 'F'
+
+            # format the temperature values so all digits line up 1s, 10s, 100s place
+            if city_temp < 100 and city_temp > 9:
+                city_temp = ' ' + str(city_temp) + degrees + 'F'
+            elif city_temp < 10 and city_temp >= 0:
+                city_temp = '  ' + str(city_temp) + degrees + 'F'
+            elif city_temp < 0 and city_temp > -10:
+                city_temp = ' ' + str(city_temp) + degrees + 'F'
+            else:
+                city_temp = str(city_temp) + degrees + 'F'
+
         else:
             city_temp = city.owm_temp
 
         # the 'wind' may or may not be part of dictionary try and expect will prevent the crash if not available
         if city.owm_wind != 'Not Available':
-            city_wind = "{0:.2f}".format(city.owm_wind) + ' mph'
+
+            # format the temperature values so all digits line up 1s, 10s, 100s place.
+            # all wind values will have 2 decimal place.
+            if city.owm_wind < 10:
+                city_wind = '  ' + '{0:.2f}'.format(city.owm_wind) + ' mph'
+            elif city.owm_wind > 9 and city.owm_wind < 100:
+                city_wind = ' ' + '{0:.2f}'.format(city.owm_wind) + ' mph'
+            else:
+                city_wind = '{0:.2f}'.format(city.owm_wind) + ' mph'
+
         else:
             city_wind = city.owm_wind
 
