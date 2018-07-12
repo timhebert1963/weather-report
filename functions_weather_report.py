@@ -185,6 +185,9 @@ def get_open_weather_map_api_key():
 def get_city_names_for_weather_report(city_names_list):
     
     def enter_country_or_state():
+
+        # enter_country_or_state() will ask user for the country long name or the USA state abbreviated name
+
         valid_string = True
 
         while valid_string == True:
@@ -276,9 +279,8 @@ def geocode_db_does_city_exist(city_name, country_or_state):
 
     ###########################################################################################################
     #
-    # does_city_exist() will determine if the city, country_or_state are valid
-    # - need to loop through the ['address_components']['long_name'] because not all cities have the same
-    #   number of 'long_name' keys and the key values are not in the same order.
+    # geocode_db_does_city_exist() will determine if the city, country_or_state are valid
+    # - need to loop through the [0]['address_components'][index_num]['long_name']
     #
     ###########################################################################################################
 
@@ -320,9 +322,8 @@ def owm_db_does_city_exist(city_name, country_or_state):
 
     ###########################################################################################################
     #
-    # Need to pass City ID to OpenWeatherMap api for accuracy
-    # - match the geocode lat and lon with the OpenWeatherMap lat and lon
-    # - when the match occurs then extract the city_id out of the OpenWeatherMap json dictionary
+    # owm_db_does_city_exist() will determine if the city, country_or_state are valid
+    # - need to loop through the [index_num]['name']
     #
     ###########################################################################################################
 
@@ -393,6 +394,8 @@ def create_city_object_list(city_names_list):
 
 def get_geocode_degrees(city_object_list, pb):
 
+    # get the geocode latitude and longitude for each city
+    
     # api_key for googlemaps geocode api
     geocode_api_key = os.environ['APIKEY']
     
@@ -637,10 +640,12 @@ def get_owm_weather_data(city_object_list, owm_url_weather, owm_APIKEY, pb):
 
     ###########################################################################################################
     #
+    # get_owm_weather_data() will get the weather data for a city and assign to city.owm_weather_data
+    #
     # example of api call to OpenWeatherMap api
     # http://api.openweathermap.org/data/2.5/weather?id=524901&APPID={APIKEY}
     #
-    # api.openweathermap.org querye
+    # api.openweathermap.org query
     # owm_url_weather = 'http://api.openweathermap.org/data/2.5/weather?'
     # data = requests.get(owm_url_weather, params={'id': city_id, 'APPID': owm_APIKEY})
     #
@@ -918,6 +923,8 @@ def get_owm_forecast_data(city_object_list, owm_url_forecast, owm_APIKEY, pb):
 
     ###########################################################################################################
     #
+    # get_owm_forecast_data() will get the weather data for a city and assign to city.owm_forecast_data
+    #
     # example of api call to OpenWeatherMap api
     # http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID={APIKEY}
     #
@@ -1154,6 +1161,7 @@ def pad_forecast_strings(string1, string2, section):
 
 def get_high_temps(three_days, city):
 
+    # high_temps to be displayed in display_forecast_report()
     # get the high_temp for each weekday in the three_day list
     if three_days[0] == 'Sunday':
         high_temp1 = city.sunday_high_temp
@@ -1197,6 +1205,7 @@ def get_high_temps(three_days, city):
 
 def get_weather_descriptions(three_days, city):
 
+    # descr to be displayed in display_forecast_report()
     if three_days[0] == 'Sunday':
         descr1 = city.sunday_weather_description
         descr2 = city.monday_weather_description

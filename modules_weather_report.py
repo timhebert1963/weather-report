@@ -13,10 +13,10 @@ class ProgressBar():
     ################################################################################
     # class ProgressBar(): designed to measure the progress of queries
     #
-    #
     # def __init__() will assign the list_length of the city_object_list
     #
-    # list_length will be used to track the completion for all cities for each query 
+    # list_length will be used to track the completion for all cities for each query
+    #  - list_length will be the length of city_object_list
     #
     ################################################################################
 
@@ -36,36 +36,46 @@ class City():
 
     def __init__(self):
 
+        #############################################################################################################
+        #
+        # city name, country or state attributes
+        #
+        #############################################################################################################
         self.city_name = ''          # name of city
         self.country_or_state = ''   # name of country or state - country will be long name: 'Canada' or 'England' 
                                      # ........................ - state will be abbreviated: 'TX' or 'CA'
 
-        self.geocode_degrees = False # googlemaps geocode lat and lng. if True  self.geocode_lat and lng have int(non-0) values
-                                     # ............................... if False self.geocode_lng and lng have int(0) values
+        #############################################################################################################
+        #
+        # googlemaps geocode attributes
+        #
+        #############################################################################################################
+        self.geocode_degrees = False # geocode lat and lng. if True  self.geocode_lat & lng have int(non-0) values
+                                     # .................... if False self.geocode_lng & lng have int(0) values
 
-        self.geocode_lat = 0         # googlemaps geocode lat degrees - returned from api as 'str' assigned as float
-        self.geocode_lng = 0         # googlemaps geocode lng degrees - returned from api as 'str' assigned as float
+        self.geocode_lat = 0         # geocode lat degrees - returned from api as 'str' assigned as float
+        self.geocode_lng = 0         # geocode lng degrees - returned from api as 'str' assigned as float
 
         self.owm_city_id = 0         # OpenWeatherMap city_id
 
-        #######################################################################################################################
+        #############################################################################################################
         #
         # local timezone, date, time and weekday name attributes
         #
-        #######################################################################################################################
+        #############################################################################################################
         self.local_timezone     = ''    # local_timezone     format 'Europe/Vienna'
         self.local_tz_dt_txt    = ''    # local_tz_dt_txt    format '2018-07-09 16:58:00' YYYY-MM-DD HH:MM:SS
         self.local_weekday_name = ''    # local_weekday_name format 'Sunday'
 
-        #######################################################################################################################
+        #############################################################################################################
         #
         # current Weather attributes
         #
-        #######################################################################################################################
+        #############################################################################################################
         self.owm_weather_report_run = False   # if False weather report not run. If True weather report has been run.
         self.owm_weather_data  = {}           # json data from OpenWeatherMap api response
-        self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
-                                              # requests.get within 10 minutes intervals.
+        self.owm_weather_last_requests  = ''  # time when last OpenWeatherMap api requests.get occurred. do not want
+                                              # to do new requests.get within 10 minutes intervals.
 
         self.owm_weather_code = 0    # assign 0  will be updated with current weather code after query
         self.owm_description  = ''   # assign '' will be updated with current description after query
@@ -73,27 +83,14 @@ class City():
         self.owm_wind         = 0    # assign 0  will be updated with current wind speed  after query
         self.owm_visibility   = 0    # assign 0  will be updated with current visibility  after query
 
-        #######################################################################################################################
+        #############################################################################################################
         #
         # Forecast attributes
         #
-        #######################################################################################################################
+        #############################################################################################################
         self.owm_forecast_data = {}           # json data from OpenWeatherMap api response
-        self.owm_forecast_last_requests = ''  # time when last OpenWeatherMap api requests.get occurred. do not want to do new
-                                              # requests.get within 10 minutes intervals.
-
-        # assign weekday names False
-        # if a date is passed in and all weekday names are False that day will be assigned True
-        # if a date is passed in and one of the weekday names are True that weekday name will remain False
-        # The end result is only 1 weekday name will be True and all others will remain False
-        # These attributes are used to determine the 1st day of the 3 day weather forecast.
-        self.sunday    = False
-        self.monday    = False
-        self.tuesday   = False
-        self.wednesday = False
-        self.thursday  = False
-        self.friday    = False
-        self.saturday  = False
+        self.owm_forecast_last_requests = ''  # time when last OpenWeatherMap api requests.get occurred. do not want
+                                              # to do new requests.get within 10 minutes intervals.
 
         # the below attributes will be used for the high_temp of each day.
         # These attributes are used in the 3 day weather forecast.
@@ -105,7 +102,7 @@ class City():
         self.friday_high_temp    = 0
         self.saturday_high_temp  = 0
 
-        # the below attributes will be used for the highest weather code of each day.
+        # the below attributes will be used for the highest priority weather code of each day.
         # These attributes are used in the 3 day weather forecast.
         self.sunday_weather_code    = 0
         self.monday_weather_code    = 0
@@ -131,6 +128,8 @@ class City():
 
     def update_local_timezone(self):
 
+        #############################################################################################################
+        #
         # set_city_tz_date_time() uses package TimezoneFinder
         # https://github.com/MrMinimal64/timezonefinder
         #
@@ -161,6 +160,8 @@ class City():
         #   longitude = 12.773955
         #   latitude = 55.578595
         #   tf.closest_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Copenhagen'
+        #
+        #############################################################################################################
 
         tf = TimezoneFinder()
 
@@ -189,7 +190,7 @@ class City():
 
     def update_local_weekday_name(self):
 
-        # self.local_weekday_name will be of string format 'Tuesday'
+        # self.local_weekday_name will be of string format 'Tuesday' and derived from the 'local_tz_dt_txt'
         #
         # it is done this way to be consistent with the owm forecast json 'dt_txt
 
@@ -202,6 +203,10 @@ class City():
     def update_owm_temp(self):
 
         # 'temp' key is not always avaialable in the owm_weather_data dictionary
+        #
+        # this condition can also occur if the requests.get query fails to the OpenWeatherMap api
+        #
+        # need to do try: expect:
         try:
             self.owm_temp = self.owm_weather_data['main']['temp']
         except:
@@ -213,6 +218,10 @@ class City():
     def update_owm_wind(self):
 
         # 'wind' key is not always present in the owm_weather_data dictionary
+        #
+        # this condition can also occur if the requests.get query fails to the OpenWeatherMap api
+        #
+        # need to do try: expect:
         try:
             self.owm_wind = self.owm_weather_data['wind']['speed']
         except:
@@ -224,6 +233,10 @@ class City():
     def update_owm_visibility(self):
 
         # 'visibility' key is not always present in the owm_weather_data dictionary
+        #
+        # this condition can also occur if the requests.get query fails to the OpenWeatherMap api
+        #
+        # need to do try: expect:
         try:
             self.owm_visibility = self.owm_weather_data['visibility']
         except:
@@ -234,6 +247,11 @@ class City():
 
     def update_owm_weather_code(self):
 
+        # 'id' key is not always present in the owm_weather_data dictionary
+        #
+        # this condition can also occur if the requests.get query fails to the OpenWeatherMap api
+        #
+        # need to do try: expect:
         try:
             # get the weather code
             #
@@ -252,9 +270,11 @@ class City():
 
     def update_owm_description(self):
 
-
         # 'weather' key is not always present in the owm_weather_data dictionary
-
+        #
+        # this condition can also occur if the requests.get query fails to the OpenWeatherMap api
+        #
+        # need to do try: expect:
         try:
             # get the weather code id and convert to string
             #
@@ -379,7 +399,7 @@ class City():
         # self.<weekday name>_weather_code = self.owm_weather_code
         #
         # match on the self.local_weekday_name to find the correct self.<weekday name>_weather_code
-        # to update
+        # to update <weekday name>_weather_code
         if self.local_weekday_name == 'Sunday':
             self.sunday_weather_code = self.owm_weather_code
 
@@ -410,7 +430,7 @@ class City():
         # self.<weekday name>_high_temp = self.owm_temp
         #
         # match on the self.local_weekday_name to find the correct self.<weekday name>_high_temp
-        # to update
+        # to update <weekday name>_high_temp
         if self.local_weekday_name == 'Sunday':
             self.sunday_high_temp = self.owm_temp
 
@@ -441,7 +461,7 @@ class City():
         # self.<weekday name>_weather_description = self.owm_description
         #
         # match on the self.local_weekday_name to find the correct self.<weekday name>_weather_description
-        # to update
+        # to update <weekday name>_weather_description
         if self.local_weekday_name == 'Sunday':
             self.sunday_weather_description = self.owm_description
 
@@ -482,7 +502,7 @@ class City():
             # f_priority is the priority of f_weather_code
             #    - f_priority will be looked up and retrieved from the owm_weather_priority_codes dictionary
             f_weather_code = self.owm_forecast_data['list'][i]['weather'][0]['id']
-            f_priority = owm_weather_priority_codes['codes'][str(weather_code)]['priority']
+            f_priority = owm_weather_priority_codes['codes'][str(f_weather_code)]['priority']
 
             # if <weekday name>_weather_code = 0:
             #    this means a valid weather code has not been assigned
